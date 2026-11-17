@@ -31,7 +31,16 @@ h3{font-size:13px;font-weight:600;color:var(--mut);margin:0 0 10px;text-transfor
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
 .sim{font-size:12px;text-align:center;color:#f5dd6b;background:#2a2410;border:1px solid #5c4d17;border-radius:10px;padding:6px 10px;margin-bottom:12px}
 /* semaforo */
-.light{display:flex;gap:14px;align-items:flex-start}
+.light{display:flex;gap:14px;align-items:flex-start;position:relative}
+.lt-i{position:absolute;top:8px;right:8px;width:34px;height:34px;display:grid;place-items:center;font-size:17px;color:var(--mut);border-radius:10px}
+.lt-i:active{background:rgba(255,255,255,.08)}
+.bt{width:100%;border-collapse:collapse;font-size:12px;margin:2px 0 6px}
+.bt th{font-weight:600;color:var(--mut);text-align:right;padding:4px 3px}
+.bt th:first-child,.bt td:first-child{text-align:left}
+.bt td{padding:5px 3px;border-top:1px solid rgba(255,255,255,.08);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bt td:first-child{white-space:normal}
+.bt i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.src a{color:#7db8ff}
 .tl{flex:none;width:38px;background:#0c0e0e;border-radius:20px;padding:6px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
 .tl i{display:block;width:26px;height:26px;border-radius:50%;background:#262b2a}
 .tl i.on.r{background:#ff5050;box-shadow:0 0 14px #ff5050}
@@ -54,6 +63,13 @@ h3{font-size:13px;font-weight:600;color:var(--mut);margin:0 0 10px;text-transfor
 #windBadge svg{width:18px;height:18px;transition:transform .3s}
 #btnExpand{bottom:10px;right:10px;width:36px;height:36px;display:grid;place-items:center}
 #btnExpand svg{width:18px;height:18px}
+#btnLayers{bottom:10px;left:10px;width:36px;height:36px;display:grid;place-items:center}
+#btnLayers svg{width:18px;height:18px}
+#layerMenu{bottom:52px;left:10px;display:none;flex-direction:column;padding:4px;z-index:1000}
+#layerMenu.on{display:flex}
+#layerMenu button{padding:8px 14px;border-radius:8px;text-align:left;font-size:13px;color:var(--text)}
+#layerMenu button.on{background:var(--card2);color:var(--acc);font-weight:600}
+#mapErr{top:50%;left:50%;transform:translate(-50%,-50%);padding:8px 12px;display:none;text-align:center;max-width:80%;font-size:12px;color:var(--mut)}
 #mapHour{top:10px;left:10px;padding:6px 9px;display:none}
 .legend{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;font-size:11px;color:var(--mut);border-top:1px solid var(--line)}
 .legend span{display:flex;align-items:center;gap:4px}
@@ -127,6 +143,31 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 .tag.red{background:#3a1416;color:#ff9a9a}
 .lnk{color:var(--acc);font-size:13px;margin-top:8px;display:inline-block}
 .prose p{margin:0 0 10px;font-size:14px}.prose ul{margin:0 0 10px;padding-left:18px;font-size:14px}
+/* scheda inquinante */
+.pol{cursor:pointer;transition:transform .1s,background .15s;width:100%;position:relative}
+.pol:active{transform:scale(.95);background:#2e3432}
+.pol .i{position:absolute;top:4px;right:6px;font-size:12px;line-height:1;color:var(--mut);opacity:.85}
+#polScrim{position:fixed;inset:0;z-index:2100;background:rgba(8,10,10,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+#polScrim.on{opacity:1;visibility:visible}
+#polSheet{position:fixed;left:0;right:0;bottom:0;z-index:2101;max-width:520px;margin:0 auto;max-height:82vh;overflow:auto;background:rgba(27,31,30,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-bottom:0;border-radius:20px 20px 0 0;padding:8px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility .28s}
+#polSheet.on{transform:none;visibility:visible}
+.ps-head{display:flex;align-items:flex-start;gap:12px;margin:4px 0 12px}
+.ps-sym{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none;color:#111}
+.ps-head h4{margin:0;font-size:18px}
+.ps-close{margin-left:auto;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.06);flex:none}
+.ps-close svg{width:18px;height:18px}
+.ps-now{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.ps-now b{font-size:22px}
+.ps-sec{font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
+.ps-txt{font-size:14px;margin:0 0 6px}
+.ps-list{margin:0;padding-left:18px;font-size:14px}
+.lg-row{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;font-size:13px;border:1px solid transparent}
+.lg-row i{width:14px;height:14px;border-radius:50%}
+.lg-row .lg-n{font-weight:600}
+.lg-row .lg-d{color:var(--mut);font-size:12px}
+.lg-row .lg-r{font-variant-numeric:tabular-nums;color:var(--mut);text-align:right;white-space:nowrap}
+.lg-row.cur{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18)}
+.lg-row.cur .lg-r{color:var(--text)}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#2b302f;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:13px;z-index:3000;transition:transform .25s;max-width:90vw}
 #toast.on{transform:translateX(-50%)}
 </style>
@@ -168,6 +209,7 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
   <div class="sim">Prototipo: tutti i valori sono simulati, non usarli per decisioni reali</div>
 
   <section class="card light" id="light">
+    <button class="lt-i" id="btnLtInfo" aria-label="Come funziona il semaforo">ⓘ</button>
     <div class="tl"><i class="r"></i><i class="y"></i><i class="g"></i></div>
     <div style="flex:1;min-width:0">
       <div class="lt-title" id="ltTitle"></div>
@@ -183,6 +225,9 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
       <div id="map"></div>
       <div class="map-ctl" id="mapHour"></div>
       <div class="map-ctl" id="windBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M6 10l6-6 6 6"/></svg><span id="windTxt"></span></div>
+      <button class="map-ctl" id="btnLayers" aria-label="Tipo di mappa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+      <div class="map-ctl" id="layerMenu"></div>
+      <div class="map-ctl" id="mapErr">Sfondo della mappa non caricato. Controlla la connessione.</div>
       <button class="map-ctl" id="btnExpand" aria-label="Ingrandisci mappa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
     <div class="legend">
@@ -204,7 +249,7 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
   <section class="card">
     <h3>Inquinanti <span class="mut" id="polHour" style="text-transform:none;font-weight:400;letter-spacing:0"></span></h3>
     <div class="pols" id="pols"></div>
-    <div class="note">Concentrazioni in µg/m³. Il colore segue le fasce dell'indice europeo (EAQI).</div>
+    <div class="note">Concentrazioni in µg/m³. Il colore segue le fasce dell'indice di qualità dell'aria europeo (EAQI). Tocca un inquinante per saperne di più.</div>
   </section>
 
   <section class="card">
@@ -245,9 +290,10 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
   <div class="card prose">
     <h3>Come funziona il semaforo</h3>
     <ul>
-      <li>Si parte dall'indice europeo della qualità dell'aria (EAQI), calcolato su PM2.5, PM10, NO₂, O₃ e SO₂.</li>
+      <li>Si parte dall'indice di qualità dell'aria europeo (EAQI, in breve AQ) dell'Agenzia europea dell'ambiente (EEA), calcolato su PM2.5, PM10, NO₂, O₃ e SO₂. Le fasce usate sono quelle attuali dell'EEA, che per i livelli Buona e Discreta si basano sulle linee guida OMS 2021.</li>
       <li>Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: +2 sotto i 5 km, +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°).</li>
       <li>Verde: buona o discreta. Giallo: moderata. Rosso: scarsa o peggio.</li>
+      <li>I consigli per ogni livello riprendono i messaggi sanitari dell'EEA, distinti tra popolazione generale e persone sensibili. Persone sensibili: adulti e bambini con problemi respiratori e adulti con problemi cardiaci.</li>
     </ul>
   </div>
   <div class="card prose">
@@ -256,11 +302,17 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
       <li>Open-Meteo / Copernicus CAMS: previsione oraria degli inquinanti e del vento.</li>
       <li>EEA e WAQI: misure delle centraline ufficiali quasi in tempo reale (tramite backend su Netlify).</li>
       <li>ARPA Puglia (rete regionale e rete ADI di Taranto): storico e sforamenti.</li>
-      <li>Mappa: © OpenStreetMap, © CARTO.</li>
+      <li>Fasce dell'indice: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index, EEA</a>.</li>
+      <li>Mappa: © Esri, HERE, Garmin, OpenStreetMap contributors.</li>
     </ul>
   </div>
 </main>
 
+</div>
+<div id="polScrim"></div>
+<div id="polSheet" role="dialog" aria-modal="true" aria-labelledby="psTitle">
+  <div class="grab"></div>
+  <div id="polBody"></div>
 </div>
 <div id="toast"></div>
 
@@ -271,31 +323,31 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 const LV=[null,
  {n:'Buona',c:'#50F0E6'},{n:'Discreta',c:'#50CCAA'},{n:'Moderata',c:'#F0E641'},
  {n:'Scarsa',c:'#FF5050'},{n:'Molto scarsa',c:'#E0457B'},{n:'Estremamente scarsa',c:'#B56BE0'}];
-const BANDS={pm25:[10,20,25,50,75],pm10:[20,40,50,100,150],no2:[40,90,120,230,340],o3:[50,100,130,240,380],so2:[100,200,350,500,750]};
+const BANDS={pm25:[5,15,50,90,140],pm10:[15,45,120,195,270],no2:[10,25,60,100,150],o3:[60,100,120,160,180],so2:[20,40,125,190,275]};
 const POLNAME={pm25:'PM2.5',pm10:'PM10',no2:'NO₂',o3:'O₃',so2:'SO₂'};
 const CFG={maxKm:20,cone:30,minSpd:8};
 const DIRS=['N','NE','E','SE','S','SO','O','NO'];
 
 const SITES=[
- {id:'ilva',name:"Ex ILVA – Acciaierie d'Italia",short:'ex ILVA',city:'Taranto',kind:'Acciaieria',lat:40.510,lon:17.205},
- {id:'eni-ta',name:'Raffineria Eni Taranto',short:'raffineria di Taranto',city:'Taranto',kind:'Raffineria',lat:40.487,lon:17.185},
- {id:'cerano',name:'Centrale Federico II (Cerano)',short:'centrale di Cerano',city:'Brindisi',kind:'Centrale elettrica',lat:40.565,lon:18.030},
- {id:'petbr',name:'Polo petrolchimico di Brindisi',short:'petrolchimico di Brindisi',city:'Brindisi',kind:'Petrolchimico',lat:40.630,lon:17.985},
- {id:'priolo',name:'Polo petrolchimico Priolo-Augusta-Melilli',short:'polo di Priolo',city:'Siracusa',kind:'Petrolchimico',lat:37.150,lon:15.200},
+ {id:'ilva',name:"Ex ILVA – Acciaierie d'Italia",short:'ex ILVA',city:'Taranto',kind:'Acciaieria',lat:40.5075,lon:17.2096},
+ {id:'eni-ta',name:'Raffineria Eni Taranto',short:'raffineria di Taranto',city:'Taranto',kind:'Raffineria',lat:40.4895,lon:17.1933},
+ {id:'cerano',name:'Centrale Federico II (Cerano)',short:'centrale di Cerano',city:'Brindisi',kind:'Centrale elettrica',lat:40.5636,lon:18.0322},
+ {id:'petbr',name:'Polo petrolchimico di Brindisi',short:'petrolchimico di Brindisi',city:'Brindisi',kind:'Petrolchimico',lat:40.64,lon:17.9988},
+ {id:'priolo',name:'Polo petrolchimico Priolo-Augusta-Melilli',short:'polo di Priolo',city:'Siracusa',kind:'Petrolchimico',lat:37.16,lon:15.209},
  {id:'gela',name:'Raffineria di Gela',short:'raffineria di Gela',city:'Gela',kind:'Raffineria',lat:37.060,lon:14.280},
- {id:'milazzo',name:'Raffineria di Milazzo',short:'raffineria di Milazzo',city:'Milazzo',kind:'Raffineria',lat:38.220,lon:15.260},
- {id:'marghera',name:'Porto Marghera',short:'Porto Marghera',city:'Venezia',kind:'Polo industriale',lat:45.445,lon:12.235},
- {id:'sarroch',name:'Raffineria di Sarroch',short:'raffineria di Sarroch',city:'Sarroch',kind:'Raffineria',lat:39.080,lon:9.030},
- {id:'ptorres',name:'Polo industriale di Porto Torres',short:'polo di Porto Torres',city:'Porto Torres',kind:'Petrolchimico',lat:40.840,lon:8.350},
- {id:'falconara',name:'Raffineria di Falconara',short:'raffineria di Falconara',city:'Falconara M.',kind:'Raffineria',lat:43.640,lon:13.380},
- {id:'piombino',name:'Acciaierie di Piombino',short:'acciaieria di Piombino',city:'Piombino',kind:'Acciaieria',lat:42.940,lon:10.530}
+ {id:'milazzo',name:'Raffineria di Milazzo',short:'raffineria di Milazzo',city:'Milazzo',kind:'Raffineria',lat:38.2034,lon:15.2727},
+ {id:'marghera',name:'Porto Marghera',short:'Porto Marghera',city:'Venezia',kind:'Polo industriale',lat:45.45,lon:12.255},
+ {id:'sarroch',name:'Raffineria di Sarroch',short:'raffineria di Sarroch',city:'Sarroch',kind:'Raffineria',lat:39.0773,lon:9.0184},
+ {id:'ptorres',name:'Polo industriale di Porto Torres',short:'polo di Porto Torres',city:'Porto Torres',kind:'Petrolchimico',lat:40.8324,lon:8.3465},
+ {id:'falconara',name:'Raffineria di Falconara',short:'raffineria di Falconara',city:'Falconara M.',kind:'Raffineria',lat:43.6387,lon:13.3795},
+ {id:'piombino',name:'Acciaierie di Piombino',short:'acciaieria di Piombino',city:'Piombino',kind:'Acciaieria',lat:42.9365,lon:10.5378}
 ];
 
 /* w: [indice ora da adesso, direzione da cui soffia (°), velocità km/h, fattore inquinamento] */
 const PLACES=[
  {id:'tamburi',name:'Taranto · Tamburi',lat:40.4945,lon:17.2258,ta:1,pm:36,no2:30,o3:40,so2:14,w:[[0,315,28,1],[7,320,22,.95],[8,250,12,.6],[12,200,10,.5],[18,300,20,.9]]},
  {id:'tacentro',name:'Taranto · Centro',lat:40.4730,lon:17.2405,ta:1,pm:30,no2:38,o3:42,so2:9,w:[[0,315,26,1],[8,250,12,.6],[12,200,10,.5],[18,300,20,.9]]},
- {id:'talsano',name:'Taranto · Talsano',lat:40.4050,lon:17.2900,ta:1,pm:22,no2:20,o3:55,so2:6,w:[[0,315,26,1],[8,250,12,.7],[18,300,20,.9]]},
+ {id:'talsano',name:'Taranto · Talsano',lat:40.4119,lon:17.2839,ta:1,pm:22,no2:20,o3:55,so2:6,w:[[0,315,26,1],[8,250,12,.7],[18,300,20,.9]]},
  {id:'brindisi',name:'Brindisi',lat:40.6320,lon:17.9420,pm:26,no2:30,o3:50,so2:12,w:[[0,135,18,1],[10,0,14,.8]]},
  {id:'bari',name:'Bari',lat:41.1170,lon:16.8710,pm:18,no2:35,o3:45,so2:5,w:[[0,270,15,1]]},
  {id:'priolo',name:'Priolo Gargallo',lat:37.1570,lon:15.1850,pm:24,no2:25,o3:55,so2:30,w:[[0,45,12,1],[6,90,20,1.1]]},
@@ -306,12 +358,15 @@ const PLACES=[
 ];
 
 const TA_ST=[
- {id:'orsini',name:'Tamburi – Via Orsini',lat:40.4945,lon:17.2258,mean:34,no2:30,so2:10},
- {id:'archimede',name:'Taranto – Archimede',lat:40.4895,lon:17.2335,mean:28,no2:32,so2:8},
- {id:'machiavelli',name:'Taranto – Machiavelli',lat:40.4870,lon:17.2290,mean:27,no2:28,so2:8},
- {id:'altoadige',name:'Taranto – Alto Adige',lat:40.4620,lon:17.2560,mean:24,no2:36,so2:5},
- {id:'talsano-st',name:'Taranto – Talsano',lat:40.4100,lon:17.2850,mean:20,no2:18,so2:4},
- {id:'statte',name:'Statte',lat:40.5560,lon:17.2050,mean:22,no2:16,so2:6}
+ {id:'orsini',name:'Tamburi – Via Orsini',lat:40.494510,lon:17.225830,mean:34,no2:30,so2:10},
+ {id:'archimede',name:'Taranto – Archimede',lat:40.494441,lon:17.233048,mean:28,no2:32,so2:8},
+ {id:'machiavelli',name:'Taranto – Machiavelli',lat:40.488608,lon:17.225823,mean:27,no2:28,so2:8},
+ {id:'cisi',name:'Taranto – CISI',lat:40.520934,lon:17.253416,mean:30,no2:25,so2:12},
+ {id:'altoadige',name:'Taranto – Alto Adige',lat:40.460553,lon:17.263602,mean:24,no2:36,so2:5},
+ {id:'sanvito',name:'Taranto – San Vito',lat:40.423328,lon:17.225272,mean:21,no2:20,so2:4},
+ {id:'talsano-st',name:'Taranto – Talsano',lat:40.411943,lon:17.283879,mean:20,no2:18,so2:4},
+ {id:'statte',name:'Statte – Sorgenti',lat:40.562499,lon:17.203325,mean:22,no2:16,so2:6},
+ {id:'statte-wind',name:'Statte – Wind',lat:40.526111,lon:17.173611,mean:26,no2:18,so2:8}
 ];
 
 /* ---------- utilità ---------- */
@@ -325,7 +380,7 @@ function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15
 const compass=d=>DIRS[Math.round((((d%360)+360)%360)/45)%8];
 const hh=t=>String(t.getHours()).padStart(2,'0')+':00';
 const km=d=>d<1?Math.round(d*1000)+' m':d.toFixed(1).replace('.',',')+' km';
-const lvlOf=(p,v)=>{const b=BANDS[p];for(let i=0;i<b.length;i++)if(v<=b[i])return i+1;return 6;};
+const lvlOf=(p,v)=>{v=Math.round(v);const b=BANDS[p];for(let i=0;i<b.length;i++)if(v<=b[i])return i+1;return 6;};
 const sem=l=>l<=2?'g':l===3?'y':'r';
 const dayLbl=t=>t.getDate()===new Date().getDate()?'oggi':'domani';
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2800);}
@@ -401,9 +456,9 @@ function renderLight(){
   const c=S.fc[0],k=sem(c.adj);
   const el=$('#light');el.className='card light '+k;
   el.querySelectorAll('.tl i').forEach(i=>i.classList.toggle('on',i.classList.contains(k)));
-  $('#ltTitle').textContent={g:'Via libera',y:'Esci con attenzione',r:'Meglio restare in casa'}[k];
-  $('#ltSub').textContent={g:"Aria buona per stare all'aperto",y:"Evita attività intense all'aperto",r:'Rimanda le uscite non necessarie e tieni chiuse le finestre'}[k];
-  $('#ltIndex').innerHTML=ICON.gauge+`<span>Indice europeo: <span class="pill" style="background:${LV[c.base].c}">${LV[c.base].n}</span>`+
+  $('#ltTitle').textContent={g:'Via libera',y:'Attenzione per le persone sensibili',r:c.adj>=6?"Riduci l'attività fisica all'aperto":"Riduci le attività intense all'aperto"}[k];
+  $('#ltSub').textContent=LVTXT[c.adj]+'.';
+  $('#ltIndex').innerHTML=ICON.gauge+`<span>Qualità dell'aria (EAQI): <span class="pill" style="background:${LV[c.base].c}">${LV[c.base].n}</span>`+
     (c.imp?` → con il vento <span class="pill" style="background:${LV[c.adj].c}">${LV[c.adj].n}</span>`:'')+'</span>';
   let w=`Vento da ${compass(c.dir)} a ${c.spd} km/h: `;
   if(c.imp) w+=`<b>sei sottovento a ${c.imp.site.short}</b> (${km(c.imp.d)})`;
@@ -433,14 +488,15 @@ function renderDetail(){
   const x=S.fc[S.sel];
   $('#hourDetail').innerHTML=
    `<div class="hd-row"><b>${S.sel===0?'Adesso':'Ore '+hh(x.t)+' '+dayLbl(x.t)}</b><span class="pill" style="background:${LV[x.adj].c}">${LV[x.adj].n}</span></div>`+
-   `<div class="hd-row"><span class="mut">Indice europeo</span><span>${LV[x.base].n}</span></div>`+
+   `<div class="hd-row"><span class="mut">Qualità dell'aria (EAQI)</span><span>${LV[x.base].n}</span></div>`+
    `<div class="hd-row"><span class="mut">Vento</span><span>da ${compass(x.dir)} · ${x.spd} km/h</span></div>`+
    `<div class="hd-row"><span class="mut">Effetto siti industriali</span><span>${x.imp?'+'+x.imp.bump+' livelli ('+x.imp.site.short+')':'nessuno'}</span></div>`;
 }
 function renderPols(){
   const x=S.fc[S.sel];$('#polHour').textContent=S.sel===0?'adesso':'ore '+hh(x.t);
   $('#pols').innerHTML=['pm25','pm10','no2','o3','so2'].map(k=>{const l=lvlOf(k,x.v[k]);
-    return `<div class="pol"><div class="n">${POLNAME[k]}</div><div class="v" style="color:${LV[l].c}">${x.v[k]}</div><div class="b" style="background:${LV[l].c}"></div></div>`;}).join('');
+    return `<button class="pol" data-k="${k}" aria-label="Informazioni su ${POLNAME[k]}"><div class="n">${POLNAME[k]}</div><div class="v" style="color:${LV[l].c}">${x.v[k]}</div><div class="b" style="background:${LV[l].c}"></div><span class="i" aria-hidden="true">ⓘ</span></button>`;}).join('');
+  $('#pols').querySelectorAll('.pol').forEach(b=>b.onclick=()=>openPol(b.dataset.k));
 }
 function renderAlerts(){
   const a=[];
@@ -460,8 +516,28 @@ let map=null,layer=null;
 function initMap(){
   if(typeof L==='undefined'){$('#map').innerHTML='<div style="padding:20px;color:#9aa39f;font-size:13px">Mappa non disponibile: serve la connessione per caricarla.</div>';return;}
   map=L.map('map',{zoomControl:false}).setView([41.9,12.5],6);
-  L.tileLayer('https://{s}.basemap.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
   layer=L.layerGroup().addTo(map);
+  setBase(load('map')||'mappa');
+}
+const BASES={
+ mappa:{label:'Mappa',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,attribution:'© Esri, HERE, Garmin, OpenStreetMap contributors'}},
+ scura:{label:'Scura',url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,maxNativeZoom:16,attribution:'© Esri, HERE, Garmin, OpenStreetMap contributors'},ref:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'},
+ sat:{label:'Satellite',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,attribution:'Immagini © Esri'}}
+};
+let base=null,baseRef=null,baseKey=null;
+function setBase(k){
+  if(!BASES[k]) k='mappa';
+  if(base) map.removeLayer(base);
+  if(baseRef){map.removeLayer(baseRef);baseRef=null;}
+  baseKey=k;store('map',k);
+  let ok=0,bad=0;const err=$('#mapErr');err.style.display='none';
+  base=L.tileLayer(BASES[k].url,BASES[k].o);
+  base.on('tileload',()=>{ok++;err.style.display='none';});
+  base.on('tileerror',()=>{bad++;if(!ok&&bad>=4)err.style.display='block';});
+  base.addTo(map);base.bringToBack();
+  if(BASES[k].ref){baseRef=L.tileLayer(BASES[k].ref,{maxZoom:18,maxNativeZoom:16,pane:'shadowPane'}).addTo(map);}
+  $('#layerMenu').innerHTML=Object.keys(BASES).map(x=>`<button data-b="${x}" class="${x===k?'on':''}">${BASES[x].label}</button>`).join('');
+  $('#layerMenu').querySelectorAll('button').forEach(b=>b.onclick=()=>{setBase(b.dataset.b);$('#layerMenu').classList.remove('on');});
 }
 function stationNow(st,x){
   const imp=impact(st.lat,st.lon,x.dir,x.spd);
@@ -491,7 +567,7 @@ function renderMap(){
   stationsFor(S.place).forEach(st=>{
     const m=stationNow(st,x);
     L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:LV[m.l].c,fillOpacity:1})
-     .bindPopup(`<b>${st.name}</b><br>PM10 ${m.pm10} µg/m³ · PM2.5 ${m.pm25} µg/m³<br><span class="pill" style="background:${LV[m.l].c}">${LV[m.l].n}</span>`).addTo(layer);
+     .bindPopup(`<b>${st.name}</b><br>PM10 ${m.pm10} µg/m³ · PM2.5 ${m.pm25} µg/m³<br><span class="pill" style="background:${LV[m.l].c}">${LV[m.l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Valori simulati${S.place.ta?'':' · posizione indicativa'}</div>`).addTo(layer);
   });
   L.circleMarker([S.lat,S.lon],{radius:8,color:'#fff',weight:3,fillColor:'#4da3ff',fillOpacity:1}).bindPopup('<b>Tu sei qui</b>').addTo(layer);
   if(S.fit){map.setView([S.lat,S.lon],S.place.ta?12:11);S.fit=false;}
@@ -580,6 +656,82 @@ function renderSiti(){
   });
 }
 
+/* ---------- scheda inquinante ---------- */
+const LVTXT=['',
+ "Tutti: goditi le solite attività all'aperto",
+ "Tutti: goditi le solite attività all'aperto",
+ "Tutti: attività abituali. Persone sensibili: se hai sintomi, valuta di ridurre le attività intense all'aperto",
+ "Tutti: se hai sintomi (occhi irritati, tosse, mal di gola), valuta di ridurre le attività intense all'aperto. Persone sensibili: valuta di ridurre l'attività fisica, soprattutto all'aperto",
+ "Tutti: se hai sintomi (occhi irritati, tosse, mal di gola), valuta di ridurre le attività intense all'aperto. Persone sensibili: riduci l'attività fisica, soprattutto all'aperto",
+ "Tutti: riduci l'attività fisica all'aperto. Persone sensibili: evita l'attività fisica all'aperto"];
+const POLINFO={
+ pm25:{full:'Particolato fine',what:"Particelle solide e liquide sospese nell'aria con diametro fino a 2,5 micrometri, circa trenta volte più sottili di un capello. Per le dimensioni ridotte arrivano in profondità nei polmoni e possono passare nel sangue.",
+  src:["Combustione: traffico, riscaldamento domestico (soprattutto legna e pellet)","Processi industriali e siderurgici","Formazione secondaria in atmosfera a partire da gas come NOx, SO₂ e ammoniaca"],
+  health:"È considerato l'inquinante con l'impatto sanitario maggiore: effetti su apparato respiratorio e cardiovascolare, anche con esposizioni prolungate a livelli moderati.",
+  law:"Limite di legge attuale: media annua 25 µg/m³. Dal 2030 (direttiva UE 2024/2881): media annua 10 µg/m³ e media giornaliera 25 µg/m³ (massimo 18 superamenti l'anno)."},
+ pm10:{full:'Particolato',what:"Particelle con diametro fino a 10 micrometri. Comprende anche il PM2.5. Le particelle più grandi si fermano nelle vie respiratorie superiori e nei bronchi.",
+  src:["Traffico, compresa l'usura di freni, pneumatici e asfalto","Movimentazione di materiali sfusi (minerali, carbone), cantieri, industria","Fonti naturali come sabbia del Sahara e aerosol marino"],
+  health:"Irrita le vie respiratorie e peggiora asma e bronchiti. Vicino agli impianti siderurgici può trasportare metalli e idrocarburi policiclici aromatici (IPA).",
+  law:"Limiti di legge attuali: media giornaliera 50 µg/m³ da superare al massimo 35 volte l'anno; media annua 40 µg/m³. Dal 2030: media giornaliera 45 µg/m³ (massimo 18 superamenti) e media annua 20 µg/m³."},
+ no2:{full:'Biossido di azoto',what:"Gas di colore bruno-rossastro e odore pungente, prodotto dalle combustioni ad alta temperatura. Contribuisce anche alla formazione di ozono e di particolato secondario.",
+  src:["Traffico, in particolare i motori diesel","Centrali termoelettriche e impianti industriali","Riscaldamento e navi nelle aree portuali"],
+  health:"Irrita le vie respiratorie e aumenta la sensibilità delle persone asmatiche. I valori più alti si registrano vicino alle strade trafficate, nelle ore di punta.",
+  law:"Limiti di legge attuali: media oraria 200 µg/m³ (massimo 18 superamenti l'anno); media annua 40 µg/m³. Dal 2030: media oraria 200 µg/m³ (massimo 3), media giornaliera 50 µg/m³ (massimo 18) e media annua 20 µg/m³."},
+ o3:{full:'Ozono troposferico',what:"Gas che non viene emesso direttamente: si forma vicino al suolo quando il sole agisce su ossidi di azoto e composti organici volatili. Da non confondere con lo strato di ozono in alta quota, che invece ci protegge.",
+  src:["Precursori dal traffico, dall'industria e dai solventi","Favorito da sole e caldo: picchi d'estate nel pomeriggio","Spesso più alto in periferia e in campagna che in centro città"],
+  health:"Irrita occhi, naso e gola e riduce la funzione polmonare, soprattutto durante l'attività fisica all'aperto nelle ore calde.",
+  law:"Soglia di informazione: media oraria 180 µg/m³; soglia di allarme 240 µg/m³."},
+ so2:{full:'Biossido di zolfo',what:"Gas incolore dall'odore acre, prodotto bruciando combustibili e materiali che contengono zolfo. In atmosfera contribuisce alla formazione di particolato e piogge acide.",
+  src:["Raffinerie e poli petrolchimici","Centrali a carbone o a olio combustibile","Impianti siderurgici (ad esempio l'agglomerazione) e navi"],
+  health:"Provoca irritazione delle vie respiratorie e può causare broncocostrizione nelle persone asmatiche anche dopo esposizioni brevi. È un buon indicatore delle emissioni industriali.",
+  law:"Limiti di legge attuali: media oraria 350 µg/m³ (massimo 24 superamenti l'anno); media giornaliera 125 µg/m³ (massimo 3 l'anno). Dal 2030: media oraria 350 µg/m³ (massimo 3), media giornaliera 50 µg/m³ (massimo 18) e media annua 20 µg/m³."}
+};
+function bandTxt(k,i){const b=BANDS[k];if(i===1)return '0–'+b[0];if(i===6)return '> '+b[4];return (b[i-2]+1)+'–'+b[i-1];}
+function openPol(k){
+  const x=S.fc[S.sel],v=x.v[k],l=lvlOf(k,v),I=POLINFO[k];
+  $('#polBody').innerHTML=`
+   <div class="ps-head"><div class="ps-sym" style="background:${LV[l].c}">${POLNAME[k]}</div>
+     <div><h4 id="psTitle">${I.full}</h4><div class="mut" style="font-size:13px">${POLNAME[k]} · µg/m³</div></div>
+     <button class="ps-close" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+   <div class="ps-now"><span>${S.sel===0?'Adesso':'Ore '+hh(x.t)+' '+dayLbl(x.t)}<br><span class="mut" style="font-size:12px">${S.label}</span></span>
+     <span style="text-align:right"><b style="color:${LV[l].c}">${v}</b> <span class="mut">µg/m³</span><br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span></span></div>
+   <div class="ps-sec">Che cos'è</div><p class="ps-txt">${I.what}</p>
+   <div class="ps-sec">Da dove viene</div><ul class="ps-list">${I.src.map(s=>'<li>'+s+'</li>').join('')}</ul>
+   <div class="ps-sec">Effetti sulla salute</div><p class="ps-txt">${I.health}</p>
+   <div class="ps-sec">Livelli di qualità dell'aria (EAQI)</div>
+   ${[1,2,3,4,5,6].map(i=>`<div class="lg-row ${i===l?'cur':''}"><i style="background:${LV[i].c}"></i><div><div class="lg-n">${LV[i].n}${i===l?' · adesso':''}</div><div class="lg-d">${LVTXT[i]}</div></div><div class="lg-r">${bandTxt(k,i)}</div></div>`).join('')}
+   <p class="note">${I.law} Le fasce dell'indice di qualità dell'aria servono a informare e non coincidono con i limiti di legge.</p>`;
+  $('#polBody .ps-close').onclick=closePol;
+  $('#polSheet').scrollTop=0;
+  $('#polScrim').classList.add('on');$('#polSheet').classList.add('on');
+}
+
+function openLight(){
+  const ks=['pm25','pm10','no2','o3','so2'];
+  const rows=[1,2,3,4,5,6].map(i=>`<tr><td><i style="background:${LV[i].c}"></i>${LV[i].n}</td>${ks.map(k=>`<td>${bandTxt(k,i)}</td>`).join('')}</tr>`).join('');
+  $('#polBody').innerHTML=`
+   <div class="ps-head"><div class="ps-sym" style="background:#50CCAA">AQ</div>
+     <div><h4 id="psTitle">Come funziona il semaforo</h4><div class="mut" style="font-size:13px">Indice europeo EAQI e vento</div></div>
+     <button class="ps-close" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+   <div class="ps-sec">1. Indice europeo (EAQI)</div>
+   <p class="ps-txt">Per ogni inquinante si guarda in quale fascia cade la concentrazione. Il livello complessivo è quello dell'inquinante messo peggio. Valori in µg/m³.</p>
+   <table class="bt"><tr><th>Livello</th><th>PM2.5</th><th>PM10</th><th>NO₂</th><th>O₃</th><th>SO₂</th></tr>${rows}</table>
+   <p class="note src">Fonte: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener">Agenzia europea dell'ambiente (EEA), European Air Quality Index</a>. Le fasce Buona e Discreta si basano sulle linee guida OMS 2021; per l'SO₂ la fascia Buona usa il limite annuale UE previsto dal 2030 (20 µg/m³).</p>
+   <div class="ps-sec">2. Vento e siti industriali</div>
+   <p class="ps-txt">Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: +2 sotto i 5 km, +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°). Questa regola è propria di AQ Watcher e non fa parte dell'indice europeo.</p>
+   <div class="ps-sec">3. Colore del semaforo</div>
+   <p class="ps-txt">Verde: buona o discreta. Giallo: moderata. Rosso: scarsa o peggio. I consigli mostrati per ogni livello riprendono i messaggi sanitari dell'EEA. Persone sensibili: adulti e bambini con problemi respiratori e adulti con problemi cardiaci.</p>
+   <table class="bt"><tr><th>Livello</th><th style="text-align:left">Consiglio</th></tr>${[1,2,3,4,5,6].map(i=>`<tr><td><i style="background:${LV[i].c}"></i>${LV[i].n}</td><td style="text-align:left;white-space:normal">${LVTXT[i]}</td></tr>`).join('')}</table>
+   <p class="note">Il semaforo è informativo: non sostituisce le comunicazioni di ARPA, dei Comuni e delle autorità sanitarie, né il parere di un medico.</p>`;
+  $('#polBody .ps-close').onclick=closePol;
+  $('#polSheet').scrollTop=0;
+  $('#polScrim').classList.add('on');$('#polSheet').classList.add('on');
+}
+$('#btnLtInfo').onclick=openLight;
+function closePol(){$('#polScrim').classList.remove('on');$('#polSheet').classList.remove('on');}
+$('#polScrim').onclick=closePol;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePol();});
+
 /* ---------- navigazione ---------- */
 let page='dashboard';
 function go(p){
@@ -604,6 +756,7 @@ $('#btnPlace').onclick=()=>{$('#sheet').classList.add('on');$('#scrim').classLis
 $('#scrim').onclick=closeAll;
 document.querySelectorAll('.nav a').forEach(a=>a.onclick=()=>go(a.dataset.page));
 $('#stSel').onchange=e=>{S.stId=e.target.value;renderStorico();};
+$('#btnLayers').onclick=()=>$('#layerMenu').classList.toggle('on');
 $('#btnExpand').onclick=()=>{const w=$('#mapWrap');w.classList.toggle('expanded');setTimeout(()=>map&&map.invalidateSize(),280);};
 $('#btnGps').onclick=()=>{
   if(!navigator.geolocation){toast('Posizione non disponibile su questo dispositivo');return;}
