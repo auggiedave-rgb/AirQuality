@@ -9,7 +9,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<meta name="carto-key" content="">
+<link rel="stylesheet" href="lib/leaflet.css">
 <style>
 :root{--bg:#121414;--card:#1b1f1e;--card2:#242928;--line:#2e3432;--text:#eef1ef;--mut:#9aa39f;--acc:#4fd1c5;--r:14px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -278,16 +279,17 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 <!-- STORICO -->
 <main class="page" id="page-storico">
   <h2>Storico e statistiche</h2>
-  <section class="card" id="stNA"><h3 style="text-transform:none;letter-spacing:0;color:var(--text);font-size:17px">Storico in arrivo</h3><p class="mut" style="font-size:14px;margin:6px 0 0">Questa pagina userà i dati validati di ARPA Puglia. Per ora non è disponibile: non mostriamo dati simulati al loro posto.</p></section>
-  <div class="sim">Dati simulati. Nella versione reale: API ARPA Puglia (dati validati giornalieri) e EEA</div>
+  <section class="card" id="stNA"><h3 id="stNAt" style="text-transform:none;letter-spacing:0;color:var(--text);font-size:17px">Storico</h3><p class="mut" id="stNAp" style="font-size:14px;margin:6px 0 0"></p></section>
+  <div class="sim" id="stSimNote">Dati simulati. Nella versione reale: API ARPA Puglia (dati validati giornalieri) e EEA</div>
   <div class="card">
-    <label class="mut" style="font-size:13px">Stazione<select id="stSel"></select></label>
+    <label class="mut" style="font-size:13px"><span id="stLbl">Stazione</span><select id="stSel"></select></label>
     <div class="chips" id="polChips"></div>
   </div>
   <div class="kpis" id="kpis"></div>
-  <div class="card"><h3>Ultimi 30 giorni <span class="mut" style="text-transform:none;font-weight:400;letter-spacing:0">media giornaliera</span></h3><div class="chart" id="chart30"></div></div>
-  <div class="card"><h3>Ultimi 12 mesi <span class="mut" style="text-transform:none;font-weight:400;letter-spacing:0">media mensile</span></h3><div class="chart" id="chart12"></div></div>
-  <div class="card"><h3>Confronto stazioni <span class="mut" style="text-transform:none;font-weight:400;letter-spacing:0">media annua</span></h3><div id="cmp"></div></div>
+  <div class="card"><h3><span id="h30">Ultimi 30 giorni</span> <span class="mut" id="sub30" style="text-transform:none;font-weight:400;letter-spacing:0">media giornaliera</span></h3><div class="chart" id="chart30"></div></div>
+  <div class="card"><h3><span id="h12">Ultimi 12 mesi</span> <span class="mut" id="sub12" style="text-transform:none;font-weight:400;letter-spacing:0">media mensile</span></h3><div class="chart" id="chart12"></div></div>
+  <div class="card"><h3><span id="hcmp">Confronto stazioni</span> <span class="mut" id="subcmp" style="text-transform:none;font-weight:400;letter-spacing:0">media annua</span></h3><div id="cmp"></div></div>
+  <div class="note" id="stNote" style="display:none"></div>
 </main>
 
 <!-- SITI -->
@@ -302,14 +304,16 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
   <h2>Fonti e avvertenze</h2>
   <div class="card prose">
     <h3>Avvertenza</h3>
-    <p>AQ Watcher è un prototipo. In questa versione <b>tutti i dati sono simulati</b> per provare l'interfaccia.</p>
+    <p id="warnTxt">AQ Watcher è un prototipo. In questa versione <b>tutti i dati sono simulati</b> per provare l'interfaccia.</p>
     <p>Anche con i dati reali, il semaforo è una stima e non sostituisce le comunicazioni ufficiali di ARPA, Comuni e autorità sanitarie, né il parere di un medico.</p>
   </div>
   <div class="card prose">
     <h3>Come funziona il semaforo</h3>
     <ul>
       <li>Si parte dall'indice di qualità dell'aria europeo (EAQI, in breve AQ) dell'Agenzia europea dell'ambiente (EEA), calcolato su PM2.5, PM10, NO₂, O₃ e SO₂. Le fasce usate sono quelle attuali dell'EEA, che per i livelli Buona e Discreta si basano sulle linee guida OMS 2021.</li>
-      <li>Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: +2 sotto i 5 km, +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°).</li>
+      <li>Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: sotto i 5 km +1 (+2 se l'aria è già almeno Moderata), +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°).</li>
+      <li>A Taranto e Statte, per il livello di adesso, se una centralina entro 5 km da te misura un livello più alto della stima del modello, vale la misura. Il modello non vede le emissioni locali degli impianti e vicino all'ex ILVA può sottostimare le polveri; le misure sono orarie, non validate e arrivano con qualche ora di ritardo. Per le ore successive resta la stima del modello.</li>
+      <li>Sulla mappa il pennacchio sottovento compare solo per gli impianti inquadrati, calcolato con il vento previsto sul sito di ciascun impianto. Il livello del semaforo, invece, usa il vento nel punto in cui ti trovi.</li>
       <li>Verde: buona o discreta. Giallo: moderata. Rosso: scarsa o peggio.</li>
       <li>I consigli per ogni livello riprendono i messaggi sanitari dell'EEA, distinti tra popolazione generale e persone sensibili. Persone sensibili: adulti e bambini con problemi respiratori e adulti con problemi cardiaci.</li>
     </ul>
@@ -321,9 +325,20 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
       <li>Misure orarie delle centraline di Taranto e Statte: fonte Agenzia europea dell'ambiente (EEA), <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index</a>; dati originali ARPA Puglia / Regione Puglia. Dati non validati, con ritardo di alcune ore, mostrati senza modifiche. Il colore è calcolato dall'app con le fasce EAQI e non è un'elaborazione dell'EEA. Se il dato non è disponibile la centralina è grigia.</li>
       <li>L'indice europeo e queste misure non servono a verificare il rispetto dei limiti di legge e non sono completi né garantiti dall'EEA.</li>
 
-      <li>Previste in seguito: storico e sforamenti da ARPA Puglia, EEA e WAQI (tramite backend su Netlify).</li>
+      <li>Storico e statistiche (Taranto e Statte): serie giornaliere degli ultimi giorni calcolate dalle misure orarie sopra, e statistiche dell'anno in corso calcolate dall'EEA. Dati non validati. Previsto in seguito: storico validato di ARPA Puglia.</li>
+      <li>Impianti industriali: elenco e coordinate raccolti da fonti pubbliche, indicativi e ancora da verificare. Il vento sul sito di ogni impianto viene dallo stesso modello meteo (Open-Meteo).</li>
       <li>Fasce dell'indice: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index, EEA</a>.</li>
-      <li>Mappa: © Esri, HERE, Garmin, OpenStreetMap contributors.</li>
+      <li>Mappa: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" style="color:#7db8ff">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions" target="_blank" rel="noopener" style="color:#7db8ff">CARTO</a>.</li>
+    </ul>
+  </div>
+  <div class="card prose">
+    <h3>Privacy</h3>
+    <ul>
+      <li>AQ Watcher non ha account, pubblicità, cookie di profilazione né statistiche di utilizzo, e non ha un proprio server che raccolga i tuoi dati.</li>
+      <li>La posizione GPS, se la consenti, serve solo a scegliere la località e non viene salvata fuori dal tuo telefono. Per ottenere previsioni e vento, le coordinate (arrotondate) sono inviate a Open-Meteo.com.</li>
+      <li>Per disegnare la mappa il tuo telefono scarica le tessere da CARTO, che vede il tuo indirizzo IP e la zona visualizzata. Le misure delle centraline vengono lette dai server dell'EEA (indirizzo IP, nessuna posizione).</li>
+      <li>Sul telefono restano salvate la località e la mappa scelte e una copia temporanea dei dati meteo (al massimo un paio d'ore). Puoi cancellarle dalle impostazioni del browser.</li>
+      <li>Come qualsiasi sito, il servizio che ospita l'app registra gli accessi (indirizzo IP e orario).</li>
     </ul>
   </div>
 </main>
@@ -336,7 +351,7 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 </div>
 <div id="toast"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="lib/leaflet.js"></script>
 <script>
 "use strict";
 /* ---------- costanti ---------- */
@@ -414,7 +429,7 @@ const ICON={
 };
 
 /* ---------- modello ---------- */
-function impact(lat,lon,dir,spd,only){
+function impact(lat,lon,dir,spd,only,base){
   if(spd<CFG.minSpd) return null;
   const down=(dir+180)%360;let best=null;
   for(const s of SITES){
@@ -422,7 +437,7 @@ function impact(lat,lon,dir,spd,only){
     const d=dist(s.lat,s.lon,lat,lon); if(d>CFG.maxKm) continue;
     const diff=Math.abs(((brg(s.lat,s.lon,lat,lon)-down+540)%360)-180);
     if(diff>CFG.cone) continue;
-    const bump=d<5?2:d<10?1:(diff<15?1:0); if(!bump) continue;
+    const bump=d<5?((base==null||base>=3)?2:1):d<10?1:(diff<15?1:0); if(!bump) continue;
     if(!best||bump>best.bump||(bump===best.bump&&d<best.d)) best={site:s,d,diff,bump};
   }
   return best;
@@ -443,7 +458,7 @@ function genForecast(p,lat,lon){
     v.pm25=v.pm10*(.55+.1*r());
     for(const k in v) v[k]=Math.round(v[k]);
     const base=Math.max(...Object.keys(BANDS).map(k=>lvlOf(k,v[k])));
-    const imp=impact(lat,lon,dir,spd);
+    const imp=impact(lat,lon,dir,spd,undefined,base);
     out.push({t,h,dir,spd:Math.round(spd),v,base,imp,adj:Math.min(6,base+(imp?imp.bump:0))});
   }
   return out;
@@ -463,15 +478,35 @@ function load(k){try{return localStorage.getItem('aqw-'+k);}catch(e){return null
 
 /* ---------- dati reali ---------- */
 const SIM=new URLSearchParams(location.search).has('sim');
+if(!SIM){const w=document.getElementById('warnTxt');if(w) w.innerHTML="AQ Watcher è un prototipo. Usa dati reali ma <b>provvisori</b>: previsioni del modello Copernicus CAMS e, a Taranto e Statte, misure orarie delle centraline non ancora validate. Possono contenere errori o ritardi.";}
 const API={aq:'https://air-quality-api.open-meteo.com/v1/air-quality',wx:'https://api.open-meteo.com/v1/forecast',arpa:'https://cloud.arpa.puglia.it/QualitaAria'};
 function fetchT(url,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t));}
 const getJson=r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();};
+/* Cache delle risposte Open-Meteo (memoria + localStorage): riduce le chiamate, che il servizio limita per indirizzo IP.
+   Nessun valore "di riserva": una risposta più vecchia del TTL non viene mai usata. */
+const OM_CACHE=new Map();
+async function omJson(url,ttl){
+  const now=Date.now(),m=OM_CACHE.get(url);
+  if(m&&now-m.t<ttl) return m.j;
+  const key='aq:om:'+url;
+  try{const r=JSON.parse(localStorage.getItem(key)||'null');if(r&&now-r.t<ttl){OM_CACHE.set(url,r);return r.j;}}catch(e){}
+  const j=await fetchT(url,12000).then(getJson);
+  const rec={t:now,j};OM_CACHE.set(url,rec);
+  try{
+    for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('aq:om:')&&k!==key){try{const o=JSON.parse(localStorage.getItem(k));if(!o||now-o.t>2*3600e3) localStorage.removeItem(k);}catch(e){localStorage.removeItem(k);}}}
+    localStorage.setItem(key,JSON.stringify(rec));
+  }catch(e){}
+  return j;
+}
 function fillGaps(a){const o=a.slice();let last=null;for(let i=0;i<o.length;i++){if(o[i]==null)o[i]=last;else last=o[i];}last=null;for(let i=o.length-1;i>=0;i--){if(o[i]==null)o[i]=last;else last=o[i];}return o;}
 async function loadModel(lat,lon){
   const q=`latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&timeformat=unixtime&timezone=Europe%2FRome&forecast_days=3`;
-  const [aq,wx]=await Promise.all([
-    fetchT(`${API.aq}?${q}&hourly=pm10,pm2_5,nitrogen_dioxide,sulphur_dioxide,ozone`,12000).then(getJson),
-    fetchT(`${API.wx}?${q}&hourly=wind_speed_10m,wind_direction_10m`,12000).then(getJson)]);
+  /* vento sul sito di ogni impianto (una sola richiesta con più coordinate); se fallisce, i pennacchi lontani non si disegnano */
+  const sq=`latitude=${SITES.map(x=>x.lat.toFixed(3)).join(',')}&longitude=${SITES.map(x=>x.lon.toFixed(3)).join(',')}&timeformat=unixtime&timezone=Europe%2FRome&forecast_days=3&hourly=wind_speed_10m,wind_direction_10m`;
+  const [aq,wx,sw]=await Promise.all([
+    omJson(`${API.aq}?${q}&hourly=pm10,pm2_5,nitrogen_dioxide,sulphur_dioxide,ozone`,30*60e3),
+    omJson(`${API.wx}?${q}&hourly=wind_speed_10m,wind_direction_10m`,30*60e3),
+    omJson(`${API.wx}?${sq}`,60*60e3).catch(()=>null)]);
   const H=aq.hourly,W=wx.hourly;if(!H||!W) throw new Error('risposta vuota');
   const ser={pm10:fillGaps(H.pm10),pm25:fillGaps(H.pm2_5),no2:fillGaps(H.nitrogen_dioxide),so2:fillGaps(H.sulphur_dioxide),o3:fillGaps(H.ozone)};
   const dirS=fillGaps(W.wind_direction_10m),spdS=fillGaps(W.wind_speed_10m);
@@ -485,9 +520,23 @@ async function loadModel(lat,lon){
     const t=new Date(ts*1000),dir=dirS[j],spd=spdS[j];
     const v={};for(const k in ser) v[k]=Math.round(ser[k][i0+i]);
     const base=Math.max(...Object.keys(BANDS).map(k=>lvlOf(k,v[k])));
-    const imp=impact(lat,lon,dir,spd);
+    const imp=impact(lat,lon,dir,spd,undefined,base);
     out.push({t,h:t.getHours(),dir,spd:Math.round(spd),v,base,imp,adj:Math.min(6,base+(imp?imp.bump:0))});
   }
+  try{
+    const arr=Array.isArray(sw)?sw:null;
+    if(arr&&arr.length===SITES.length){
+      const siteWx={};
+      arr.forEach((r,n)=>{
+        const h=r&&r.hourly;if(!h||!h.time) return;
+        const d=fillGaps(h.wind_direction_10m),sp=fillGaps(h.wind_speed_10m),m=new Map(h.time.map((t,i)=>[t,i]));
+        const a=[];
+        for(let i=0;i<24;i++){const j=m.get(H.time[i0+i]);if(j==null||d[j]==null||sp[j]==null){a.length=0;break;}a.push({dir:d[j],spd:Math.round(sp[j])});}
+        if(a.length===24) siteWx[SITES[n].id]=a;
+      });
+      out.siteWx=siteWx;
+    }
+  }catch(e){}
   return out;
 }
 /* Misure orarie delle centraline (rete ARPA Puglia/Regione) tramite il servizio pubblico EEA "European Air Quality Index".
@@ -528,6 +577,20 @@ const arpaLvl=v=>{let m=0;for(const k in v) m=Math.max(m,lvlOf(k,v[k]));return m
 const arpaTxt=v=>[['pm10','PM10'],['pm25','PM2.5'],['no2','NO₂'],['so2','SO₂'],['o3','O₃']].filter(a=>v[a[0]]!=null).map(a=>a[1]+' '+v[a[0]]).join(' · ');
 const itDate=d=>{const [y,m,g]=d.split('-');return g+'/'+m;};
 const itHour=ts=>{const d=new Date(ts);return d.getHours()+':00 del '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');};
+/* Il semaforo "adesso" prende il livello più alto tra modello (con vento) e ultima misura delle centraline entro MEAS_KM da te */
+const MEAS_KM=5;
+function applyMeasured(){
+  const c=S.fc&&S.fc[0];if(!c) return false;
+  if(c.adj0==null) c.adj0=c.adj;
+  const before=c.adj;let best=null;
+  if(!SIM&&S.place&&S.place.ta){
+    for(const st of TA_ST){const a=S.arpa[st.id];if(!a||!a.vals||!Object.keys(a.vals).length) continue;
+      const d=dist(st.lat,st.lon,S.lat,S.lon);if(d>MEAS_KM) continue;
+      const l=arpaLvl(a.vals);if(!best||l>best.l) best={l,st,a,d};}
+  }
+  if(best&&best.l>c.adj0){c.adj=best.l;c.meas=best;}else{c.adj=c.adj0;c.meas=null;}
+  return c.adj!==before;
+}
 function renderArpa(){
   const box=$('#arpaBox');
   if(SIM||!S.place||!S.place.ta||S.status!=='ok'){box.innerHTML='';return;}
@@ -535,11 +598,11 @@ function renderArpa(){
   for(const st of TA_ST){const a=S.arpa[st.id];if(a&&a.vals&&Object.keys(a.vals).length){const d=dist(st.lat,st.lon,S.lat,S.lon);if(d<15&&(!best||d<best.d))best={st,a,d};}}
   if(best){
     const x=S.fc[0];
-    box.innerHTML=`<b>Ultima misura della centralina più vicina</b>: ${best.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (ore ${itHour(best.a.ts)}), ${arpaTxt(best.a.vals)} µg/m³.<br>Stima del modello adesso: PM10 ${x.v.pm10} · PM2.5 ${x.v.pm25} · NO₂ ${x.v.no2} · SO₂ ${x.v.so2}. Le misure sono orarie e non ancora validate; arrivano con qualche ora di ritardo.`;
+    box.innerHTML=`<b>Ultima misura della centralina più vicina</b>: ${best.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (ore ${itHour(best.a.ts)}), ${arpaTxt(best.a.vals)} µg/m³.<br>Stima del modello adesso: PM10 ${x.v.pm10} · PM2.5 ${x.v.pm25} · NO₂ ${x.v.no2} · SO₂ ${x.v.so2}. Le misure sono orarie e non ancora validate; arrivano con qualche ora di ritardo.${S.fc[0].meas?'<br><b>Il semaforo usa la misura</b>, perché più alta della stima del modello.':''}`;
   }else if(S.arpaState==='loading'){box.textContent='Sto leggendo le misure delle centraline…';}
   else if(S.arpaState==='error'){box.textContent='Le misure delle centraline non sono raggiungibili al momento.';}
   else box.textContent='Nessuna misura recente delle centraline vicine.';
-  if(S.status==='ok') renderMap();
+  if(S.status==='ok'){if(applyMeasured()){renderLight();renderStrip();renderDetail();renderAlerts();}renderMap();}
 }
 
 /* ---------- stato dati ---------- */
@@ -557,7 +620,7 @@ async function setPlace(p,lat,lon,label){
   if(S.status==='ok') loadArpa();
 }
 async function refreshData(){
-  if(!S.place) return;
+  if(!S.place||document.hidden) return;
   if(SIM){S.fc=genForecast(S.place,S.lat,S.lon);renderAll();return;}
   const id=++reqId;
   try{const fc=await loadModel(S.lat,S.lon);if(id!==reqId) return;S.fc=fc;S.status='ok';S.fetched=new Date();}
@@ -567,7 +630,7 @@ async function refreshData(){
 function renderBanner(){
   const b=$('#dataBanner');let c='sim',t='';
   if(SIM) t='Prototipo: tutti i valori sono simulati, non usarli per decisioni reali';
-  else if(S.status==='ok'){c='sim ok';t='Dati reali: modello Copernicus CAMS (griglia di circa 11 km) e vento Open-Meteo'+(S.place&&S.place.ta?'<br>Il modello non vede le emissioni locali degli impianti: vicino all\'ex ILVA può sottostimare le polveri.':'');}
+  else if(S.status==='ok'){c='sim ok';t='Dati reali: modello Copernicus CAMS (griglia di circa 11 km) e vento, forniti da <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Open-Meteo.com</a>'+(S.place&&S.place.ta?'<br>Il modello non vede le emissioni locali degli impianti: vicino all\'ex ILVA può sottostimare le polveri.':'');}
   else if(S.status==='loading') t='Sto leggendo i dati…';
   else t='Dati non disponibili al momento';
   b.className=c;b.innerHTML=t;
@@ -584,8 +647,10 @@ function renderLight(){
   el.querySelectorAll('.tl i').forEach(i=>i.classList.toggle('on',i.classList.contains(k)));
   $('#ltTitle').textContent={g:'Via libera',y:'Attenzione per le persone sensibili',r:c.adj>=6?"Riduci l'attività fisica all'aperto":"Riduci le attività intense all'aperto"}[k];
   $('#ltSub').textContent=LVTXT[c.adj]+'.';
+  const a0=c.adj0!=null?c.adj0:c.adj;
   $('#ltIndex').innerHTML=ICON.gauge+`<span>Qualità dell'aria (EAQI): <span class="pill" style="background:${LV[c.base].c}">${LV[c.base].n}</span>`+
-    (c.imp?` → con il vento <span class="pill" style="background:${LV[c.adj].c}">${LV[c.adj].n}</span>`:'')+'</span>';
+    (c.imp?` → con il vento <span class="pill" style="background:${LV[a0].c}">${LV[a0].n}</span>`:'')+
+    (c.meas?` → <b>misurato</b> a ${c.meas.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (ore ${itHour(c.meas.a.ts)}) <span class="pill" style="background:${LV[c.adj].c}">${LV[c.adj].n}</span>`:'')+'</span>';
   let w=`Vento da ${compass(c.dir)} a ${c.spd} km/h: `;
   if(c.imp) w+=`<b>sei sottovento a ${c.imp.site.short}</b> (${km(c.imp.d)})`;
   else if(c.spd<CFG.minSpd) w+='vento debole, gli inquinanti tendono a ristagnare';
@@ -638,17 +703,23 @@ function renderAlerts(){
 }
 
 /* ---------- mappa ---------- */
-let map=null,layer=null;
+let map=null,layer=null,plumeLayer=null;
 function initMap(){
   if(typeof L==='undefined'){$('#map').innerHTML='<div style="padding:20px;color:#9aa39f;font-size:13px">Mappa non disponibile: serve la connessione per caricarla.</div>';return;}
   map=L.map('map',{zoomControl:false}).setView([41.9,12.5],6);
+  plumeLayer=L.layerGroup().addTo(map);
   layer=L.layerGroup().addTo(map);
-  setBase(load('map')||'mappa');
+  map.on('moveend',()=>{if(S.fc&&S.fc.length) drawPlumes();});
+  setBase(BASES[load('map')]?load('map'):'mappa');
 }
+/* Mappe di sfondo CARTO (OpenStreetMap). Serve una chiave gratuita: carto.com/basemaps/apikey, da incollare in <meta name="carto-key"> in alto.
+   Senza chiave le tessere mostrano la scritta "API key required". */
+const CARTO_KEY=((document.querySelector('meta[name="carto-key"]')||{}).content||'').trim();
+const CARTO_ATTR='© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+const cartoUrl=st=>`https://basemaps.cartocdn.com/rastertiles/${st}/{z}/{x}/{y}.png`+(CARTO_KEY?'?key='+encodeURIComponent(CARTO_KEY):'');
 const BASES={
- mappa:{label:'Mappa',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,attribution:'© Esri, HERE, Garmin, OpenStreetMap contributors'}},
- scura:{label:'Scura',url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,maxNativeZoom:16,attribution:'© Esri, HERE, Garmin, OpenStreetMap contributors'},ref:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'},
- sat:{label:'Satellite',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',o:{maxZoom:18,attribution:'Immagini © Esri'}}
+ mappa:{label:'Mappa',url:cartoUrl('voyager'),o:{maxZoom:19,attribution:CARTO_ATTR}},
+ scura:{label:'Scura',url:cartoUrl('dark_all'),o:{maxZoom:19,attribution:CARTO_ATTR}}
 };
 let base=null,baseRef=null,baseKey=null;
 function setBase(k){
@@ -671,32 +742,42 @@ function stationNow(st,x){
   const pm25=Math.round(pm10*.58);
   return {pm10,pm25,l:Math.max(lvlOf('pm10',pm10),lvlOf('pm25',pm25))};
 }
+/* Pennacchio sottovento: solo per gli impianti inquadrati nella mappa in questo momento */
+function drawPlumes(){
+  if(!map||!plumeLayer||!S.fc.length) return;
+  plumeLayer.clearLayers();
+  const x=S.fc[S.sel],b=map.getBounds();
+  SITES.forEach(s=>{
+    if(!b.contains([s.lat,s.lon])) return;
+    const sw=S.fc.siteWx&&S.fc.siteWx[s.id]?S.fc.siteWx[s.id][S.sel]:(dist(s.lat,s.lon,S.lat,S.lon)<40?x:null);
+    if(!sw||sw.spd<CFG.minSpd) return;
+    const dn=(sw.dir+180)%360,hit=x.imp&&x.imp.site===s;
+    const pts=[[s.lat,s.lon],dest(s.lat,s.lon,dn-CFG.cone,CFG.maxKm*.75),dest(s.lat,s.lon,dn-12,CFG.maxKm*.9),dest(s.lat,s.lon,dn,CFG.maxKm),dest(s.lat,s.lon,dn+12,CFG.maxKm*.9),dest(s.lat,s.lon,dn+CFG.cone,CFG.maxKm*.75)];
+    L.polygon(pts,{stroke:false,fillColor:hit?'#FF5050':'#F0A040',fillOpacity:hit?.22:.12,interactive:false}).addTo(plumeLayer).bringToBack();
+  });
+}
 function renderMap(){
   const x=S.fc[S.sel];
   const down=(x.dir+180)%360;
   $('#windBadge svg').style.transform=`rotate(${down}deg)`;
   $('#windTxt').textContent=`${compass(x.dir)} ${x.spd} km/h`;
-  const mh=$('#mapHour');mh.style.display=S.sel?'block':'none';mh.textContent='ore '+hh(x.t)+' '+dayLbl(x.t);
+  const mh=$('#mapHour');mh.style.display=S.sel?'block':'none';mh.innerHTML='ore '+hh(x.t)+' '+dayLbl(x.t)+(S.sel&&!SIM&&S.place&&S.place.ta?'<br><span style="font-size:11px;color:#9aa39f">centraline: ultima misura</span>':'');
   if(!map) return;
   layer.clearLayers();
-  if(x.spd>=CFG.minSpd){
-    SITES.filter(s=>dist(s.lat,s.lon,S.lat,S.lon)<40).forEach(s=>{
-      const hit=x.imp&&x.imp.site===s;
-      const pts=[[s.lat,s.lon],dest(s.lat,s.lon,down-CFG.cone,CFG.maxKm*.75),dest(s.lat,s.lon,down-12,CFG.maxKm*.9),dest(s.lat,s.lon,down,CFG.maxKm),dest(s.lat,s.lon,down+12,CFG.maxKm*.9),dest(s.lat,s.lon,down+CFG.cone,CFG.maxKm*.75)];
-      L.polygon(pts,{stroke:false,fillColor:hit?'#FF5050':'#F0A040',fillOpacity:hit?.22:.12,interactive:false}).addTo(layer);
-    });
-  }
+  if(plumeLayer) plumeLayer.clearLayers();
+  drawPlumes();
   SITES.forEach(s=>{
     L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html:`<div class="fac-ic">${ICON.fac}</div>`,iconSize:[26,26],iconAnchor:[13,13]})})
-     .bindPopup(`<b>${s.name}</b><br><span style="color:#9aa39f">${s.kind} · ${s.city}</span><br>${km(dist(s.lat,s.lon,S.lat,S.lon))} da te`).addTo(layer);
+     .bindPopup(`<b>${s.name}</b><br><span style="color:#9aa39f">${s.kind} · ${s.city}</span><br>${km(dist(s.lat,s.lon,S.lat,S.lon))} da te`+(S.fc.siteWx&&S.fc.siteWx[s.id]?`<div style="color:#9aa39f;font-size:12px;margin-top:4px">Vento sul sito${S.sel?' (ore '+hh(x.t)+')':''}: da ${compass(S.fc.siteWx[s.id][S.sel].dir)}, ${S.fc.siteWx[s.id][S.sel].spd} km/h${S.fc.siteWx[s.id][S.sel].spd<CFG.minSpd?' (debole: nessun pennacchio)':''}</div>`:'')).addTo(layer);
   });
   stationsFor(S.place).forEach(st=>{
     if(!SIM){
       const a=S.arpa[st.id],ok=a&&a.vals&&Object.keys(a.vals).length;
       if(ok){
         const l=arpaLvl(a.vals),age=Math.round((Date.now()-new Date(a.ts).getTime())/3600e3);
-        L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:LV[l].c,fillOpacity:1})
-         .bindPopup(`<b>${st.name}</b><br>${arpaTxt(a.vals)} µg/m³<br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Misura oraria delle ore ${itHour(a.ts)}${age>12?' (dato di '+age+' ore fa)':''}, rete ARPA Puglia/Regione via EEA. Dato non validato: il colore applica le fasce EAQI.</div>`).addTo(layer);
+        const fut=S.sel>0;
+        L.circleMarker([st.lat,st.lon],fut?{radius:9,color:'#9aa39f',weight:2,dashArray:'3 3',fillColor:LV[l].c,fillOpacity:.35}:{radius:9,color:'#121414',weight:2,fillColor:LV[l].c,fillOpacity:1})
+         .bindPopup(`<b>${st.name}</b>${fut?'<div style="color:#f5dd6b;font-size:12px;margin:3px 0">Ultima misura, non una previsione per le ore '+hh(x.t)+' '+dayLbl(x.t)+'</div>':''}<br>${arpaTxt(a.vals)} µg/m³<br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Misura oraria delle ore ${itHour(a.ts)}${age>12?' (dato di '+age+' ore fa)':''}, rete ARPA Puglia/Regione via EEA.<div style="font-size:10px;margin-top:3px">Dato non validato: il colore applica le fasce EAQI.</div></div>`).addTo(layer);
       }else{
         L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:'#6b7270',fillOpacity:1})
          .bindPopup(`<b>${st.name}</b><br><span style="color:#9aa39f">${S.arpaState==='loading'?'Sto leggendo la misura…':(EEA_ST[st.id]?'Misura non disponibile al momento':'Centralina non presente nel servizio europeo')}</span>`).addTo(layer);
@@ -738,15 +819,15 @@ function barChart(vals,ref,labelsAt){
   labelsAt.forEach(([i,t],n)=>s+=`<text x="${n===labelsAt.length-1?W-1:n===0?pl:pl+i*bw+bw/2}" y="${H-4}" font-size="9" fill="#7d8682" text-anchor="${n===labelsAt.length-1?'end':n===0?'start':'middle'}">${t}</text>`);
   return s+'</svg>';
 }
-function lineChart(vals,ref,labels){
+function lineChart(vals,ref,labels,refLabel){
   const W=320,H=130,pl=28,pb=18,max=Math.max(ref||0,...vals)*1.15,sx=(W-pl-10)/(vals.length-1);
   const y=v=>H-pb-(v/max)*(H-pb-6),X=i=>pl+5+i*sx;
   let s=`<svg viewBox="0 0 ${W} ${H}">`;
   [0,.5,1].forEach(f=>{const v=Math.round(max*f/1.15);s+=`<text x="${pl-4}" y="${y(v)+3}" font-size="9" fill="#7d8682" text-anchor="end">${v}</text><line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#262b2a"/>`;});
-  if(ref) s+=`<line x1="${pl}" x2="${W}" y1="${y(ref)}" y2="${y(ref)}" stroke="#FF5050" stroke-dasharray="4 3"/><text x="${W-2}" y="${y(ref)-4}" font-size="9" fill="#ff9a9a" text-anchor="end">limite annuo ${ref}</text>`;
+  if(ref) s+=`<line x1="${pl}" x2="${W}" y1="${y(ref)}" y2="${y(ref)}" stroke="#FF5050" stroke-dasharray="4 3"/><text x="${W-2}" y="${y(ref)-4}" font-size="9" fill="#ff9a9a" text-anchor="end">${refLabel||'limite annuo '+ref}</text>`;
   s+=`<polyline points="${vals.map((v,i)=>X(i)+','+y(v)).join(' ')}" fill="none" stroke="#85B7EB" stroke-width="2.2" stroke-linejoin="round"/>`;
   vals.forEach((v,i)=>s+=`<circle cx="${X(i)}" cy="${y(v)}" r="3" fill="${ref&&v>ref?'#FF5050':'#85B7EB'}"/>`);
-  labels.forEach((t,i)=>{if(i%2===0||i===labels.length-1)s+=`<text x="${X(i)}" y="${H-4}" font-size="9" fill="#7d8682" text-anchor="middle">${t}</text>`;});
+  labels.forEach((t,i)=>{if(i%2===0||i===labels.length-1)s+=`<text x="${i===labels.length-1?W-2:X(i)}" y="${H-4}" font-size="9" fill="#7d8682" text-anchor="${i===labels.length-1?'end':'middle'}">${t}</text>`;});
   return s+'</svg>';
 }
 function renderStorico(){
@@ -754,7 +835,7 @@ function renderStorico(){
   if(!S.stId||!sts.find(s=>s.id===S.stId)) S.stId=sts[0].id;
   $('#stSel').innerHTML=sts.map(s=>`<option value="${s.id}" ${s.id===S.stId?'selected':''}>${s.name}</option>`).join('');
   $('#polChips').innerHTML=Object.keys(POLS).map(p=>`<button class="chip ${p===S.pol?'on':''}" data-p="${p}">${p}</button>`).join('');
-  $('#polChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{S.pol=b.dataset.p;renderStorico();});
+  $('#polChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{S.pol=b.dataset.p;SIM?renderStorico():renderStoricoReal();});
   const st=sts.find(s=>s.id===S.stId),P=POLS[S.pol],ser=series(st,S.pol);
   const avg=ser.reduce((a,x)=>a+x.v,0)/ser.length;
   const k=[];
@@ -776,6 +857,96 @@ function renderStorico(){
   $('#cmp').innerHTML=all.map(a=>{const c=P.annual&&a.v>P.annual?'#FF5050':a.v>(P.annual||mx)*.75?'#F0E641':'#50CCAA';
     return `<div class="cmp-row"><span style="${a.s.id===S.stId?'font-weight:700':''}">${a.s.name.replace(/^.*– /,'')}</span><div class="cmp-bar" style="width:${a.v/mx*100}%;background:${c}"></div><span class="mut">${Math.round(a.v)}</span></div>`;}).join('')+
     (P.annual?`<div class="note">Limite annuo di legge: ${P.annual} µg/m³</div>`:'');
+}
+
+
+/* ---------- storico reale (Taranto e Statte) ---------- */
+const EEA_STATS='https://dis2datalake.blob.core.windows.net/airquality-derivated/AQI-noRunningMeans/stats/IT/';
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dm=ds=>{const [y,m,g]=ds.split('-');return (+g)+' '+MESI[+m-1];};
+const lvIdx=x=>Math.max(1,Math.min(6,Math.floor(x)));
+async function histStation(id){
+  const code=EEA_ST[id];
+  const [rc,rs]=await Promise.all([fetchT(EEA_URL+code+'.json',15000),fetchT(EEA_STATS+code+'.json',15000).catch(()=>null)]);
+  if(!rc.ok) throw new Error('HTTP '+rc.status);
+  const j=await rc.json();let stats=null;
+  try{if(rs&&rs.ok) stats=await rs.json();}catch(e){}
+  const now=Date.now(),today=ymd(new Date()),daily={},peak={};
+  for(const k in j){
+    const d=new Date(k);if(d.getTime()>now) continue;const ds=ymd(d);
+    for(const p in EEA_POL){
+      const n=EEA_POL[p],v=j[k]['val_'+p];
+      if(j[k]['modelled_'+p]===0&&v!=null&&isFinite(v)&&v>=0){
+        const o=((daily[n]=daily[n]||{})[ds]=(daily[n][ds]||{s:0,n:0}));o.s+=v;o.n++;
+        if(!peak[n]||v>peak[n].v) peak[n]={v:Math.round(v*10)/10,k};
+      }
+    }
+  }
+  const days={};
+  for(const n in daily) days[n]=Object.keys(daily[n]).filter(ds=>ds!==today&&daily[n][ds].n>=12).sort().map(ds=>({ds,v:daily[n][ds].s/daily[n][ds].n}));
+  return {days,peak,stats};
+}
+async function loadHist(){
+  if(S.histBusy) return;S.histBusy=true;
+  const ids=Object.keys(EEA_ST),res={};let fails=0;
+  await Promise.all(ids.map(async id=>{try{res[id]=await histStation(id);}catch(e){fails++;}}));
+  S.histBusy=false;
+  if(fails===ids.length){S.histErr=true;}else{S.hist=res;S.histT=Date.now();S.histErr=false;}
+  updateStorico();
+}
+function showNA(t,p){const pg=$('#page-storico');pg.classList.add('na');$('#stNAt').textContent=t;$('#stNAp').textContent=p;}
+function updateStorico(){
+  const pg=$('#page-storico');
+  $('#stSimNote').style.display=SIM?'':'none';
+  if(SIM){pg.classList.remove('na');$('#stNote').style.display='none';$('#stLbl').textContent='Stazione';if(page==='storico') renderStorico();return;}
+  if(!S.place||!S.place.ta){showNA('Storico non ancora disponibile per questa località','Per ora lo storico c\'è solo per Taranto e Statte, dove abbiamo collegato le centraline. Non mostriamo dati simulati al loro posto.');return;}
+  if(page!=='storico') return;
+  if(S.hist&&Date.now()-S.histT>30*60e3&&!S.histBusy) loadHist();
+  if(S.hist){pg.classList.remove('na');renderStoricoReal();return;}
+  if(S.histErr){showNA('Non riesco a leggere lo storico','Il servizio dei dati non risponde oppure manca la connessione. Riapri questa pagina tra poco.');return;}
+  showNA('Sto leggendo lo storico…','Un attimo.');loadHist();
+}
+function renderStoricoReal(){
+  const sts=TA_ST.filter(s=>S.hist[s.id]);
+  if(!sts.length){showNA('Storico non disponibile','Nessuna centralina ha dati recenti al momento.');return;}
+  if(!S.stId||!sts.find(s=>s.id===S.stId)) S.stId=(sts.find(s=>S.hist[s.id].days[POLS[S.pol].k]&&s.id===S.stId)||sts[0]).id;
+  $('#stLbl').textContent='Centralina';
+  $('#stSel').innerHTML=sts.map(s=>`<option value="${s.id}" ${s.id===S.stId?'selected':''}>${s.name}</option>`).join('');
+  $('#polChips').innerHTML=Object.keys(POLS).map(p=>`<button class="chip ${p===S.pol?'on':''}" data-p="${p}">${p}</button>`).join('');
+  $('#polChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{S.pol=b.dataset.p;renderStoricoReal();});
+  const st=sts.find(s=>s.id===S.stId),H=S.hist[st.id],P=POLS[S.pol],ser=H.days[P.k]||[],stt=H.stats;
+  const note=$('#stNote');note.style.display='block';
+  note.innerHTML='Misure orarie provvisorie della rete ARPA Puglia/Regione Puglia, diffuse dall\'EEA: non sono validate e non servono a verificare il rispetto dei limiti di legge. Le serie giornaliere coprono solo gli ultimi giorni conservati dal servizio; le statistiche dell\'anno sono calcolate dall\'EEA.';
+  const k=[];
+  if(ser.length){
+    const avg=ser.reduce((a,x)=>a+x.v,0)/ser.length,w=ser.reduce((m,x)=>x.v>m.v?x:m,ser[0]),pk=H.peak[P.k];
+    k.push({l:`Media negli ultimi ${ser.length} giorni`,v:`${Math.round(avg)}<small> µg/m³</small>`,c:''});
+    if(P.daily){const n=ser.filter(x=>x.v>P.daily).length;k.push({l:`Giorni sopra ${P.daily} µg/m³ (su ${ser.length}, indicativo)`,v:`${n}<small> giorni</small>`,c:n?'bad':'good'});}
+    if(pk){const d=new Date(pk.k);k.push({l:'Picco orario',v:`${Math.round(pk.v)}<small> µg/m³ · ${d.getDate()} ${MESI[d.getMonth()]} ore ${d.getHours()}</small>`,c:''});}
+    k.push({l:'Giorno peggiore (media)',v:`${Math.round(w.v)}<small> µg/m³ · ${dm(w.ds)}</small>`,c:''});
+  }else{
+    k.push({l:'Questa centralina',v:`<small>non ha misure recenti di ${S.pol}</small>`,c:''});
+  }
+  if(stt&&stt.ndays){
+    const bad=(stt.ndays_4||0)+(stt.ndays_5||0)+(stt.ndays_6||0);
+    k.push({l:`Giorni "Scarsa" o peggio nel ${new Date().getFullYear()} (indice EEA)`,v:`${bad}<small> su ${stt.ndays}</small>`,c:bad?'bad':'good'});
+    const wd=stt.worst10_days&&stt.worst10_days[0];
+    if(wd) k.push({l:`Giorno peggiore dell'anno (indice EEA): ${dm(wd[0])}`,v:`<span style="font-size:18px">${LV[lvIdx(wd[1])].n}</span>`,c:''});
+  }
+  $('#kpis').innerHTML=k.map(x=>`<div class="kpi ${x.c}"><div class="l">${x.l}</div><div class="v">${x.v}</div></div>`).join('');
+  $('#h30').textContent='Ultimi giorni';$('#sub30').textContent='media giornaliera, '+S.pol;
+  if(ser.length>=2){
+    const m=Math.floor((ser.length-1)/2),lb=i=>dm(ser[i].ds);
+    $('#chart30').innerHTML=barChart(ser.map(x=>x.v),P.daily,[[0,lb(0)],[m,lb(m)],[ser.length-1,lb(ser.length-1)]])+
+      (P.daily?'':'<div class="note">Per questo inquinante non c\'è un limite giornaliero di legge.</div>');
+  }else $('#chart30').innerHTML='<div class="note">Non ci sono abbastanza giorni con misure per questo inquinante.</div>';
+  $('#h12').textContent='Mese per mese';$('#sub12').textContent='indice medio EEA, tutti gli inquinanti';
+  const mo=stt&&stt.months?Object.keys(stt.months).map(Number).sort((a,b)=>a-b):[];
+  $('#chart12').innerHTML=mo.length>=2?lineChart(mo.map(m=>stt.months[m]),3,mo.map(m=>MESI[m-1]),'Moderata')+'<div class="note">Indice da 1 (buona) a 6 (estremamente scarsa), media dell\'indice orario.</div>':'<div class="note">Statistiche mensili non disponibili.</div>';
+  $('#hcmp').textContent='Confronto centraline';$('#subcmp').textContent='media del periodo, '+S.pol;
+  const all=sts.map(s=>{const sr=S.hist[s.id].days[P.k]||[];return sr.length?{s,v:sr.reduce((a,x)=>a+x.v,0)/sr.length}:null;}).filter(Boolean).sort((a,b)=>b.v-a.v);
+  const mx=Math.max(1,...all.map(a=>a.v));
+  $('#cmp').innerHTML=all.length?all.map(a=>`<div class="cmp-row"><span style="${a.s.id===S.stId?'font-weight:700':''}">${a.s.name.replace(/^.*– /,'')}</span><div class="cmp-bar" style="width:${a.v/mx*100}%;background:${LV[lvlOf(P.k,a.v)].c}"></div><span class="mut">${Math.round(a.v)}</span></div>`).join('')+'<div class="note">Il colore applica le fasce orarie EAQI al valore medio ed è indicativo.</div>':'<div class="note">Nessuna centralina ha misure recenti di questo inquinante.</div>';
 }
 
 /* ---------- siti ---------- */
@@ -856,7 +1027,8 @@ function openLight(){
    <table class="bt"><tr><th>Livello</th><th>PM2.5</th><th>PM10</th><th>NO₂</th><th>O₃</th><th>SO₂</th></tr>${rows}</table>
    <p class="note src">Fonte: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener">Agenzia europea dell'ambiente (EEA), European Air Quality Index</a>. Le fasce Buona e Discreta si basano sulle linee guida OMS 2021; per l'SO₂ la fascia Buona usa il limite annuale UE previsto dal 2030 (20 µg/m³).</p>
    <div class="ps-sec">2. Vento e siti industriali</div>
-   <p class="ps-txt">Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: +2 sotto i 5 km, +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°). Questa regola è propria di AQ Watcher e non fa parte dell'indice europeo.</p>
+   <p class="ps-txt">Se entro 20 km c'è un sito industriale e il vento (almeno 8 km/h) soffia da lì verso di te, entro ±30°, il livello sale: sotto i 5 km +1 (+2 se l'aria è già almeno Moderata), +1 sotto i 10 km, +1 fino a 20 km se sei proprio in asse (±15°). Questa regola è propria di AQ Watcher e non fa parte dell'indice europeo.</p>
+   <p class="ps-txt">A Taranto e Statte, per il livello di adesso, se una centralina entro 5 km da te misura un livello più alto della stima del modello, vale la misura (orario, non validato, con qualche ora di ritardo). Anche questa è una regola di AQ Watcher.</p>
    <div class="ps-sec">3. Colore del semaforo</div>
    <p class="ps-txt">Verde: buona o discreta. Giallo: moderata. Rosso: scarsa o peggio. I consigli mostrati per ogni livello riprendono i messaggi sanitari dell'EEA. Persone sensibili: adulti e bambini con problemi respiratori e adulti con problemi cardiaci.</p>
    <table class="bt"><tr><th>Livello</th><th style="text-align:left">Consiglio</th></tr>${[1,2,3,4,5,6].map(i=>`<tr><td><i style="background:${LV[i].c}"></i>${LV[i].n}</td><td style="text-align:left;white-space:normal">${LVTXT[i]}</td></tr>`).join('')}</table>
@@ -876,7 +1048,7 @@ function go(p){
   page=p;document.querySelectorAll('.page').forEach(e=>e.classList.toggle('active',e.id==='page-'+p));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.page===p));
   closeAll();window.scrollTo(0,0);
-  if(p==='storico'&&SIM) renderStorico();
+  if(p==='storico'){S.histErr=false;updateStorico();}
   if(p==='siti'&&S.fc.length) renderSiti();
   if(p==='dashboard'&&map) setTimeout(()=>map.invalidateSize(),50);
 }
@@ -886,6 +1058,7 @@ function renderAll(){
   $('#page-dashboard').classList.toggle('nodata',!ok);
   renderBanner();renderHeader();
   if(ok){
+    applyMeasured();
     renderLight();renderStrip();renderDetail();renderPols();renderAlerts();
     if(map) map.invalidateSize();
     renderMap();renderArpa();
@@ -895,8 +1068,7 @@ function renderAll(){
     $('#ndP').textContent=ld?'Un attimo.':'Il servizio dei dati non risponde oppure manca la connessione. Non mostriamo valori di riserva per non darti informazioni sbagliate. Riprova tra poco.';
     $('#btnRetry').style.display=ld?'none':'inline-block';
   }
-  $('#page-storico').classList.toggle('na',!SIM);
-  if(page==='storico'&&SIM) renderStorico();
+  updateStorico();
   if(page==='siti'&&S.fc.length) renderSiti();
   $('#placeList').innerHTML=PLACES.map(p=>`<button class="pl-item ${p===S.place&&!S.gps?'on':''}" data-id="${p.id}"><span>${p.name}</span><small>${p.ta?'focus ex ILVA':''}</small></button>`).join('');
   $('#placeList').querySelectorAll('.pl-item').forEach(b=>b.onclick=()=>{closeAll();setPlace(PLACES.find(p=>p.id===b.dataset.id));});
@@ -906,7 +1078,7 @@ $('#btnMenu').onclick=()=>{$('#drawer').classList.add('on');$('#scrim').classLis
 $('#btnPlace').onclick=()=>{$('#sheet').classList.add('on');$('#scrim').classList.add('on');};
 $('#scrim').onclick=closeAll;
 document.querySelectorAll('.nav a').forEach(a=>a.onclick=()=>go(a.dataset.page));
-$('#stSel').onchange=e=>{S.stId=e.target.value;renderStorico();};
+$('#stSel').onchange=e=>{S.stId=e.target.value;SIM?renderStorico():renderStoricoReal();};
 $('#btnLayers').onclick=()=>$('#layerMenu').classList.toggle('on');
 $('#btnExpand').onclick=()=>{const w=$('#mapWrap');w.classList.toggle('expanded');setTimeout(()=>map&&map.invalidateSize(),280);};
 $('#btnGps').onclick=()=>{
@@ -923,6 +1095,7 @@ $('#btnGps').onclick=()=>{
 initMap();
 setPlace(PLACES.find(p=>p.id===load('place'))||PLACES[0]);
 setInterval(refreshData,10*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.place&&!SIM&&(!S.fetched||Date.now()-S.fetched.getTime()>10*60e3)) refreshData();});
 $('#btnRetry').onclick=()=>setPlace(S.place,S.gps?S.lat:undefined,S.gps?S.lon:undefined,S.gps?S.label:undefined);
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
