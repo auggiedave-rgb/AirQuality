@@ -1,0 +1,11 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+# La radice del sito apre l'app
+[[redirects]]
+  from = "/"
+  to = "/AQWatcher.html"
+  status = 200
