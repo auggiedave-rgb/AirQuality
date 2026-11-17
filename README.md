@@ -22,3 +22,10 @@ Apri `AQWatcher.html` nel browser (serve internet per la mappa). L'installazione
 - Fase 1: Open-Meteo (previsione inquinanti e vento) + API ARPA Puglia (storico Taranto)
 - Fase 2: funzioni Netlify per WAQI ed EEA (misure delle centraline, chiavi nascoste)
 - Fase 3: rifinitura per il pubblico
+
+
+## Fase 1: dati reali
+- La dashboard legge la previsione oraria da Open-Meteo (modello Copernicus CAMS, griglia ~11 km) e il vento da Open-Meteo. Se il servizio non risponde, mostra una schermata di errore con "Riprova" e non valori di riserva.
+- Le misure giornaliere delle centraline ARPA Puglia (Taranto e Statte) sono lette in modo opzionale: se il servizio non risponde, i marker restano grigi.
+- Lo storico è nascosto finché non sarà collegato ai dati validati ARPA (Fase 2, con funzione Netlify e cache).
+- Per vedere l'interfaccia con valori simulati: aggiungere `?sim=1` all'indirizzo.

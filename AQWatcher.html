@@ -32,6 +32,16 @@ h3{font-size:13px;font-weight:600;color:var(--mut);margin:0 0 10px;text-transfor
 .sim{font-size:12px;text-align:center;color:#f5dd6b;background:#2a2410;border:1px solid #5c4d17;border-radius:10px;padding:6px 10px;margin-bottom:12px}
 /* semaforo */
 .light{display:flex;gap:14px;align-items:flex-start;position:relative}
+.sim.ok{color:#8ff0b8;background:#0f2219;border-color:#24603f}
+#nodata{display:none;text-align:center;padding:22px 16px}
+#nodata h3{margin:0 0 6px;font-size:17px;text-transform:none;letter-spacing:0;color:var(--text)}
+#page-dashboard.nodata>section:not(#nodata){display:none}
+#page-dashboard.nodata>#nodata{display:block}
+#stNA{display:none}
+#page-storico.na>*:not(h2):not(#stNA){display:none}
+#page-storico.na>#stNA{display:block}
+#arpaBox{font-size:13px;margin-top:10px;color:var(--mut)}
+#arpaBox b{color:var(--text)}
 .lt-i{position:absolute;top:8px;right:8px;width:34px;height:34px;display:grid;place-items:center;font-size:17px;color:var(--mut);border-radius:10px}
 .lt-i:active{background:rgba(255,255,255,.08)}
 .bt{width:100%;border-collapse:collapse;font-size:12px;margin:2px 0 6px}
@@ -206,7 +216,13 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 
 <!-- DASHBOARD -->
 <main class="page active" id="page-dashboard">
-  <div class="sim">Prototipo: tutti i valori sono simulati, non usarli per decisioni reali</div>
+  <div class="sim" id="dataBanner"></div>
+
+  <section class="card" id="nodata">
+    <h3 id="ndT"></h3>
+    <p class="mut" id="ndP" style="margin:0 0 12px;font-size:14px"></p>
+    <button class="chip" id="btnRetry">Riprova</button>
+  </section>
 
   <section class="card light" id="light">
     <button class="lt-i" id="btnLtInfo" aria-label="Come funziona il semaforo">ⓘ</button>
@@ -250,6 +266,7 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
     <h3>Inquinanti <span class="mut" id="polHour" style="text-transform:none;font-weight:400;letter-spacing:0"></span></h3>
     <div class="pols" id="pols"></div>
     <div class="note">Concentrazioni in µg/m³. Il colore segue le fasce dell'indice di qualità dell'aria europeo (EAQI). Tocca un inquinante per saperne di più.</div>
+    <div id="arpaBox"></div>
   </section>
 
   <section class="card">
@@ -261,6 +278,7 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
 <!-- STORICO -->
 <main class="page" id="page-storico">
   <h2>Storico e statistiche</h2>
+  <section class="card" id="stNA"><h3 style="text-transform:none;letter-spacing:0;color:var(--text);font-size:17px">Storico in arrivo</h3><p class="mut" style="font-size:14px;margin:6px 0 0">Questa pagina userà i dati validati di ARPA Puglia. Per ora non è disponibile: non mostriamo dati simulati al loro posto.</p></section>
   <div class="sim">Dati simulati. Nella versione reale: API ARPA Puglia (dati validati giornalieri) e EEA</div>
   <div class="card">
     <label class="mut" style="font-size:13px">Stazione<select id="stSel"></select></label>
@@ -297,11 +315,11 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
     </ul>
   </div>
   <div class="card prose">
-    <h3>Fonti previste (versione reale)</h3>
+    <h3>Fonti dei dati</h3>
     <ul>
-      <li>Open-Meteo / Copernicus CAMS: previsione oraria degli inquinanti e del vento.</li>
-      <li>EEA e WAQI: misure delle centraline ufficiali quasi in tempo reale (tramite backend su Netlify).</li>
-      <li>ARPA Puglia (rete regionale e rete ADI di Taranto): storico e sforamenti.</li>
+      <li>Previsione oraria di inquinanti e vento: modello Copernicus CAMS (griglia di circa 11 km), distribuito da <a href="https://open-meteo.com" target="_blank" rel="noopener" style="color:#7db8ff">Open-Meteo.com</a> (licenza CC BY 4.0). Contiene informazioni del Copernicus Atmosphere Monitoring Service.</li>
+      <li>Misure delle centraline di Taranto e Statte: ARPA Puglia (rete regionale e rete ADI), valori giornalieri. Quando il servizio non risponde la mappa mostra le centraline in grigio.</li>
+      <li>Previste in seguito: storico e sforamenti da ARPA Puglia, EEA e WAQI (tramite backend su Netlify).</li>
       <li>Fasce dell'indice: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index, EEA</a>.</li>
       <li>Mappa: © Esri, HERE, Garmin, OpenStreetMap contributors.</li>
     </ul>
@@ -430,27 +448,138 @@ function genForecast(p,lat,lon){
 }
 function stationsFor(p){
   if(p.ta) return TA_ST;
+  if(!SIM) return [];
   const r=rng(hash(p.id+'st'));
   return ['A','B','C'].map((x,i)=>{const pt=dest(p.lat,p.lon,i*120+r()*60,1.5+r()*3);
     return {id:p.id+x,name:p.name.split(' · ')[0]+' – stazione '+x,lat:pt[0],lon:pt[1],mean:Math.round(p.pm*(.7+r()*.4)),no2:Math.round(p.no2*(.7+r()*.5)),so2:Math.round(p.so2*(.6+r()*.5))};});
 }
 
 /* ---------- stato ---------- */
-const S={place:null,lat:0,lon:0,label:'',fc:[],sel:0,gps:false,stId:null,pol:'PM10',fit:true};
+const S={place:null,lat:0,lon:0,label:'',fc:[],sel:0,gps:false,stId:null,pol:'PM10',fit:true,status:'loading',fetched:null,arpa:{},arpaT:0,arpaState:''};
 function store(k,v){try{localStorage.setItem('aqw-'+k,v);}catch(e){}}
 function load(k){try{return localStorage.getItem('aqw-'+k);}catch(e){return null;}}
 
-function setPlace(p,lat,lon,label){
+/* ---------- dati reali ---------- */
+const SIM=new URLSearchParams(location.search).has('sim');
+const API={aq:'https://air-quality-api.open-meteo.com/v1/air-quality',wx:'https://api.open-meteo.com/v1/forecast',arpa:'https://cloud.arpa.puglia.it/QualitaAria'};
+function fetchT(url,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t));}
+const getJson=r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();};
+function fillGaps(a){const o=a.slice();let last=null;for(let i=0;i<o.length;i++){if(o[i]==null)o[i]=last;else last=o[i];}last=null;for(let i=o.length-1;i>=0;i--){if(o[i]==null)o[i]=last;else last=o[i];}return o;}
+async function loadModel(lat,lon){
+  const q=`latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&timeformat=unixtime&timezone=Europe%2FRome&forecast_days=3`;
+  const [aq,wx]=await Promise.all([
+    fetchT(`${API.aq}?${q}&hourly=pm10,pm2_5,nitrogen_dioxide,sulphur_dioxide,ozone`,12000).then(getJson),
+    fetchT(`${API.wx}?${q}&hourly=wind_speed_10m,wind_direction_10m`,12000).then(getJson)]);
+  const H=aq.hourly,W=wx.hourly;if(!H||!W) throw new Error('risposta vuota');
+  const ser={pm10:fillGaps(H.pm10),pm25:fillGaps(H.pm2_5),no2:fillGaps(H.nitrogen_dioxide),so2:fillGaps(H.sulphur_dioxide),o3:fillGaps(H.ozone)};
+  const dirS=fillGaps(W.wind_direction_10m),spdS=fillGaps(W.wind_speed_10m);
+  if(Object.values(ser).some(s=>s.some(x=>x==null))||dirS.some(x=>x==null)||spdS.some(x=>x==null)) throw new Error('dati mancanti');
+  const nowS=Math.floor(Date.now()/3600e3)*3600;
+  const i0=H.time.findIndex(t=>t>=nowS);if(i0<0||i0+24>H.time.length) throw new Error('orizzonte insufficiente');
+  const wi=new Map(W.time.map((t,i)=>[t,i]));
+  const out=[];
+  for(let i=0;i<24;i++){
+    const ts=H.time[i0+i],j=wi.get(ts);if(j==null) throw new Error('orari non allineati');
+    const t=new Date(ts*1000),dir=dirS[j],spd=spdS[j];
+    const v={};for(const k in ser) v[k]=Math.round(ser[k][i0+i]);
+    const base=Math.max(...Object.keys(BANDS).map(k=>lvlOf(k,v[k])));
+    const imp=impact(lat,lon,dir,spd);
+    out.push({t,h:t.getHours(),dir,spd:Math.round(spd),v,base,imp,adj:Math.min(6,base+(imp?imp.bump:0))});
+  }
+  return out;
+}
+/* ARPA Puglia: misure giornaliere (best effort, il servizio può essere lento o non rispondere) */
+const ARPA_ST={orsini:['ADI',101],archimede:['RRQA',19],machiavelli:['RRQA',20],cisi:['RRQA',37],altoadige:['RRQA',22],sanvito:['RRQA',21],'talsano-st':['RRQA',38],statte:['RRQA',18],'statte-wind':['RRQA',40]};
+const POLMAP={PM10:'pm10',PM25:'pm25',NO2:'no2',SO2:'so2',O3:'o3'};
+function parseCsv(csv){const L=csv.trim().split(/\r?\n/);const H=L.shift().split(',').map(x=>x.trim());return L.map(l=>{const c=[];let cur='',q=false;for(const ch of l){if(ch==='"')q=!q;else if(ch===','&&!q){c.push(cur);cur='';}else cur+=ch;}c.push(cur);const o={};H.forEach((k,i)=>o[k]=c[i]);return o;});}
+function arpaLatest(rows){
+  const vals={},dates={};
+  for(const r of rows){
+    const k=POLMAP[(r.inquinante_misurato||'').toUpperCase().replace(/[^A-Z0-9]/g,'')];if(!k) continue;
+    const raw=(r.valore_inquinante_misurato||'').trim().replace(',','.');if(raw==='') continue;
+    const v=parseFloat(raw);if(!isFinite(v)||v<0) continue;
+    const d=(r.data_di_misurazione||'').slice(0,10);if(!d) continue;
+    if(!dates[k]||d>=dates[k]){dates[k]=d;vals[k]=Math.round(v*10)/10;}
+  }
+  const ds=Object.values(dates);if(!ds.length) return null;
+  const date=ds.reduce((a,b)=>a>b?a:b);
+  const only={};for(const k in vals) if(dates[k]===date) only[k]=vals[k];
+  return {vals:only,date};
+}
+async function arpaStation(id){
+  const [net,sid]=ARPA_ST[id],now=new Date();
+  for(let back=0;back<2;back++){
+    const d=new Date(now.getFullYear(),now.getMonth()-back,1);
+    const r=await fetchT(`${API.arpa}?network=${net}&year=${d.getFullYear()}&month=${d.getMonth()+1}&id_station=${sid}`,15000);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const res=arpaLatest(parseCsv(await r.text()));
+    if(res) return res;
+  }
+  return null;
+}
+async function loadArpa(){
+  if(SIM||!S.place||!S.place.ta) return;
+  if(S.arpaT&&Date.now()-S.arpaT<3600e3) return;
+  S.arpaT=Date.now();S.arpaState='loading';
+  const ids=Object.keys(ARPA_ST);let i=0,fails=0;
+  async function worker(){while(i<ids.length){const id=ids[i++];try{S.arpa[id]=await arpaStation(id);}catch(e){fails++;S.arpa[id]=null;}renderArpa();}}
+  await Promise.all([worker(),worker(),worker()]);
+  S.arpaState=fails===ids.length?'error':'done';
+  if(fails===ids.length) S.arpaT=0;
+  renderArpa();
+}
+const arpaLvl=v=>{let m=0;for(const k in v) m=Math.max(m,lvlOf(k,v[k]));return m;};
+const arpaTxt=v=>[['pm10','PM10'],['pm25','PM2.5'],['no2','NO₂'],['so2','SO₂'],['o3','O₃']].filter(a=>v[a[0]]!=null).map(a=>a[1]+' '+v[a[0]]).join(' · ');
+const itDate=d=>{const [y,m,g]=d.split('-');return g+'/'+m;};
+function renderArpa(){
+  const box=$('#arpaBox');
+  if(SIM||!S.place||!S.place.ta||S.status!=='ok'){box.innerHTML='';return;}
+  let best=null;
+  for(const st of TA_ST){const a=S.arpa[st.id];if(a&&a.vals&&Object.keys(a.vals).length){const d=dist(st.lat,st.lon,S.lat,S.lon);if(d<15&&(!best||d<best.d))best={st,a,d};}}
+  if(best){
+    const x=S.fc[0];
+    box.innerHTML=`<b>Misura ARPA più vicina</b>: ${best.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (${itDate(best.a.date)}), ${arpaTxt(best.a.vals)} µg/m³.<br>Stima del modello adesso: PM10 ${x.v.pm10} · PM2.5 ${x.v.pm25} · NO₂ ${x.v.no2} · SO₂ ${x.v.so2}. Le misure ARPA sono valori giornalieri e non vanno confrontati ora per ora.`;
+  }else if(S.arpaState==='loading'){box.textContent='Sto leggendo le misure delle centraline ARPA…';}
+  else if(S.arpaState==='error'){box.textContent='Le misure delle centraline ARPA non sono raggiungibili al momento.';}
+  else box.textContent='Nessuna misura recente delle centraline ARPA vicine.';
+  if(S.status==='ok') renderMap();
+}
+
+/* ---------- stato dati ---------- */
+let reqId=0;
+async function setPlace(p,lat,lon,label){
   S.place=p;S.lat=lat??p.lat;S.lon=lon??p.lon;S.label=label||p.name;S.gps=!!label;
-  S.fc=genForecast(p,S.lat,S.lon);S.sel=0;S.fit=true;S.stId=null;
+  S.sel=0;S.fit=true;S.stId=null;
   if(!S.gps) store('place',p.id);
+  const id=++reqId;
+  if(SIM){S.fc=genForecast(p,S.lat,S.lon);S.status='sim';S.fetched=null;renderAll();return;}
+  S.status='loading';S.fc=[];renderAll();
+  try{const fc=await loadModel(S.lat,S.lon);if(id!==reqId) return;S.fc=fc;S.status='ok';S.fetched=new Date();}
+  catch(e){if(id!==reqId) return;S.fc=[];S.status='error';}
   renderAll();
+  if(S.status==='ok') loadArpa();
+}
+async function refreshData(){
+  if(!S.place) return;
+  if(SIM){S.fc=genForecast(S.place,S.lat,S.lon);renderAll();return;}
+  const id=++reqId;
+  try{const fc=await loadModel(S.lat,S.lon);if(id!==reqId) return;S.fc=fc;S.status='ok';S.fetched=new Date();}
+  catch(e){if(id!==reqId) return;if(S.fetched&&Date.now()-S.fetched.getTime()<3600e3) return;S.fc=[];S.status='error';}
+  renderAll();
+}
+function renderBanner(){
+  const b=$('#dataBanner');let c='sim',t='';
+  if(SIM) t='Prototipo: tutti i valori sono simulati, non usarli per decisioni reali';
+  else if(S.status==='ok'){c='sim ok';t='Dati reali: modello Copernicus CAMS (griglia di circa 11 km) e vento Open-Meteo'+(S.place&&S.place.ta?'<br>Il modello non vede le emissioni locali degli impianti: vicino all\'ex ILVA può sottostimare le polveri.':'');}
+  else if(S.status==='loading') t='Sto leggendo i dati…';
+  else t='Dati non disponibili al momento';
+  b.className=c;b.innerHTML=t;
 }
 
 /* ---------- render dashboard ---------- */
 function renderHeader(){
   $('#placeName').textContent=S.label;
-  const n=new Date();$('#updated').textContent='aggiornato '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+(S.gps?' · dati di '+S.place.name:'');
+  const n=new Date();const f=S.fetched||n;if(!SIM&&S.status!=='ok'){$('#updated').textContent='';return;}$('#updated').textContent=(SIM?'simulato ':'aggiornato ')+String(f.getHours()).padStart(2,'0')+':'+String(f.getMinutes()).padStart(2,'0')+(S.gps?' · posizione attuale':'');
 }
 function renderLight(){
   const c=S.fc[0],k=sem(c.adj);
@@ -565,6 +694,18 @@ function renderMap(){
      .bindPopup(`<b>${s.name}</b><br><span style="color:#9aa39f">${s.kind} · ${s.city}</span><br>${km(dist(s.lat,s.lon,S.lat,S.lon))} da te`).addTo(layer);
   });
   stationsFor(S.place).forEach(st=>{
+    if(!SIM){
+      const a=S.arpa[st.id],ok=a&&a.vals&&Object.keys(a.vals).length;
+      if(ok){
+        const l=arpaLvl(a.vals),age=Math.round((Date.now()-new Date(a.date+'T12:00:00').getTime())/864e5);
+        L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:LV[l].c,fillOpacity:1})
+         .bindPopup(`<b>${st.name}</b><br>${arpaTxt(a.vals)} µg/m³<br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Misura ARPA Puglia del ${itDate(a.date)}${age>7?' (dato di '+age+' giorni fa)':''}. Valore giornaliero: il colore applica le fasce orarie EAQI ed è indicativo.</div>`).addTo(layer);
+      }else{
+        L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:'#6b7270',fillOpacity:1})
+         .bindPopup(`<b>${st.name}</b><br><span style="color:#9aa39f">${S.arpaState==='loading'?'Sto leggendo la misura…':'Misura ARPA non disponibile al momento'}</span>`).addTo(layer);
+      }
+      return;
+    }
     const m=stationNow(st,x);
     L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:LV[m.l].c,fillOpacity:1})
      .bindPopup(`<b>${st.name}</b><br>PM10 ${m.pm10} µg/m³ · PM2.5 ${m.pm25} µg/m³<br><span class="pill" style="background:${LV[m.l].c}">${LV[m.l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Valori simulati${S.place.ta?'':' · posizione indicativa'}</div>`).addTo(layer);
@@ -714,7 +855,7 @@ function openLight(){
      <div><h4 id="psTitle">Come funziona il semaforo</h4><div class="mut" style="font-size:13px">Indice europeo EAQI e vento</div></div>
      <button class="ps-close" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
    <div class="ps-sec">1. Indice europeo (EAQI)</div>
-   <p class="ps-txt">Per ogni inquinante si guarda in quale fascia cade la concentrazione. Il livello complessivo è quello dell'inquinante messo peggio. Valori in µg/m³.</p>
+   <p class="ps-txt">Per ogni inquinante si guarda in quale fascia cade la concentrazione. Il livello complessivo è quello dell'inquinante messo peggio. Valori in µg/m³. I valori sono una stima oraria del modello Copernicus CAMS su una griglia di circa 11 km: non vedono le emissioni locali di un singolo impianto, quindi vicino a una grande fonte possono risultare più bassi della realtà.</p>
    <table class="bt"><tr><th>Livello</th><th>PM2.5</th><th>PM10</th><th>NO₂</th><th>O₃</th><th>SO₂</th></tr>${rows}</table>
    <p class="note src">Fonte: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener">Agenzia europea dell'ambiente (EEA), European Air Quality Index</a>. Le fasce Buona e Discreta si basano sulle linee guida OMS 2021; per l'SO₂ la fascia Buona usa il limite annuale UE previsto dal 2030 (20 µg/m³).</p>
    <div class="ps-sec">2. Vento e siti industriali</div>
@@ -738,15 +879,28 @@ function go(p){
   page=p;document.querySelectorAll('.page').forEach(e=>e.classList.toggle('active',e.id==='page-'+p));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.page===p));
   closeAll();window.scrollTo(0,0);
-  if(p==='storico') renderStorico();
-  if(p==='siti') renderSiti();
+  if(p==='storico'&&SIM) renderStorico();
+  if(p==='siti'&&S.fc.length) renderSiti();
   if(p==='dashboard'&&map) setTimeout(()=>map.invalidateSize(),50);
 }
 function closeAll(){$('#drawer').classList.remove('on');$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
 function renderAll(){
-  renderHeader();renderLight();renderStrip();renderDetail();renderPols();renderAlerts();renderMap();
-  if(page==='storico') renderStorico();
-  if(page==='siti') renderSiti();
+  const ok=S.status==='ok'||S.status==='sim';
+  $('#page-dashboard').classList.toggle('nodata',!ok);
+  renderBanner();renderHeader();
+  if(ok){
+    renderLight();renderStrip();renderDetail();renderPols();renderAlerts();
+    if(map) map.invalidateSize();
+    renderMap();renderArpa();
+  }else{
+    const ld=S.status==='loading';
+    $('#ndT').textContent=ld?'Sto leggendo i dati…':'Non riesco a leggere i dati';
+    $('#ndP').textContent=ld?'Un attimo.':'Il servizio dei dati non risponde oppure manca la connessione. Non mostriamo valori di riserva per non darti informazioni sbagliate. Riprova tra poco.';
+    $('#btnRetry').style.display=ld?'none':'inline-block';
+  }
+  $('#page-storico').classList.toggle('na',!SIM);
+  if(page==='storico'&&SIM) renderStorico();
+  if(page==='siti'&&S.fc.length) renderSiti();
   $('#placeList').innerHTML=PLACES.map(p=>`<button class="pl-item ${p===S.place&&!S.gps?'on':''}" data-id="${p.id}"><span>${p.name}</span><small>${p.ta?'focus ex ILVA':''}</small></button>`).join('');
   $('#placeList').querySelectorAll('.pl-item').forEach(b=>b.onclick=()=>{closeAll();setPlace(PLACES.find(p=>p.id===b.dataset.id));});
 }
@@ -765,13 +919,14 @@ $('#btnGps').onclick=()=>{
     const {latitude:la,longitude:lo}=pos.coords;
     const near=PLACES.reduce((m,p)=>dist(p.lat,p.lon,la,lo)<dist(m.lat,m.lon,la,lo)?p:m,PLACES[0]);
     setPlace(near,la,lo,'La tua posizione');
-    toast('Dati simulati presi da: '+near.name);
+    toast('Posizione trovata');
   },()=>toast('Non riesco a leggere la posizione. Scegli una località dal menu in alto.'),{timeout:10000});
 };
 
 initMap();
 setPlace(PLACES.find(p=>p.id===load('place'))||PLACES[0]);
-setInterval(()=>{if(S.place){S.fc=genForecast(S.place,S.lat,S.lon);renderAll();}},10*60*1000);
+setInterval(refreshData,10*60*1000);
+$('#btnRetry').onclick=()=>setPlace(S.place,S.gps?S.lat:undefined,S.gps?S.lon:undefined,S.gps?S.label:undefined);
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
