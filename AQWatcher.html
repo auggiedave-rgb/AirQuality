@@ -318,7 +318,9 @@ select{width:100%;background:var(--card2);color:var(--text);border:1px solid var
     <h3>Fonti dei dati</h3>
     <ul>
       <li>Previsione oraria di inquinanti e vento: modello Copernicus CAMS (griglia di circa 11 km), distribuito da <a href="https://open-meteo.com" target="_blank" rel="noopener" style="color:#7db8ff">Open-Meteo.com</a> (licenza CC BY 4.0). Contiene informazioni del Copernicus Atmosphere Monitoring Service.</li>
-      <li>Misure delle centraline di Taranto e Statte: ARPA Puglia (rete regionale e rete ADI), valori giornalieri. Quando il servizio non risponde la mappa mostra le centraline in grigio.</li>
+      <li>Misure orarie delle centraline di Taranto e Statte: fonte Agenzia europea dell'ambiente (EEA), <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index</a>; dati originali ARPA Puglia / Regione Puglia. Dati non validati, con ritardo di alcune ore, mostrati senza modifiche. Il colore è calcolato dall'app con le fasce EAQI e non è un'elaborazione dell'EEA. Se il dato non è disponibile la centralina è grigia.</li>
+      <li>L'indice europeo e queste misure non servono a verificare il rispetto dei limiti di legge e non sono completi né garantiti dall'EEA.</li>
+
       <li>Previste in seguito: storico e sforamenti da ARPA Puglia, EEA e WAQI (tramite backend su Netlify).</li>
       <li>Fasce dell'indice: <a href="https://airindex.eea.europa.eu/AQI/index.html" target="_blank" rel="noopener" style="color:#7db8ff">European Air Quality Index, EEA</a>.</li>
       <li>Mappa: © Esri, HERE, Garmin, OpenStreetMap contributors.</li>
@@ -488,42 +490,36 @@ async function loadModel(lat,lon){
   }
   return out;
 }
-/* ARPA Puglia: misure giornaliere (best effort, il servizio può essere lento o non rispondere) */
-const ARPA_ST={orsini:['ADI',101],archimede:['RRQA',19],machiavelli:['RRQA',20],cisi:['RRQA',37],altoadige:['RRQA',22],sanvito:['RRQA',21],'talsano-st':['RRQA',38],statte:['RRQA',18],'statte-wind':['RRQA',40]};
-const POLMAP={PM10:'pm10',PM25:'pm25',NO2:'no2',SO2:'so2',O3:'o3'};
-function parseCsv(csv){const L=csv.trim().split(/\r?\n/);const H=L.shift().split(',').map(x=>x.trim());return L.map(l=>{const c=[];let cur='',q=false;for(const ch of l){if(ch==='"')q=!q;else if(ch===','&&!q){c.push(cur);cur='';}else cur+=ch;}c.push(cur);const o={};H.forEach((k,i)=>o[k]=c[i]);return o;});}
-function arpaLatest(rows){
-  const vals={},dates={};
-  for(const r of rows){
-    const k=POLMAP[(r.inquinante_misurato||'').toUpperCase().replace(/[^A-Z0-9]/g,'')];if(!k) continue;
-    const raw=(r.valore_inquinante_misurato||'').trim().replace(',','.');if(raw==='') continue;
-    const v=parseFloat(raw);if(!isFinite(v)||v<0) continue;
-    const d=(r.data_di_misurazione||'').slice(0,10);if(!d) continue;
-    if(!dates[k]||d>=dates[k]){dates[k]=d;vals[k]=Math.round(v*10)/10;}
-  }
-  const ds=Object.values(dates);if(!ds.length) return null;
-  const date=ds.reduce((a,b)=>a>b?a:b);
-  const only={};for(const k in vals) if(dates[k]===date) only[k]=vals[k];
-  return {vals:only,date};
-}
+/* Misure orarie delle centraline (rete ARPA Puglia/Regione) tramite il servizio pubblico EEA "European Air Quality Index".
+   Sono dati orari non ancora validati, con ritardo tipico di alcune ore. Solo valori misurati (modelled=0). */
+const EEA_URL='https://dis2datalake.blob.core.windows.net/airquality-derivated/AQI-noRunningMeans/current/';
+const EEA_ST={archimede:'IT1660A',machiavelli:'IT1611A',cisi:'IT1609A',altoadige:'IT1613A',sanvito:'IT1610A','talsano-st':'IT1614A',statte:'IT1608A','statte-wind':'IT1607A'};
+const EEA_POL={PM10:'pm10','PM2.5':'pm25',NO2:'no2',SO2:'so2',O3:'o3'};
 async function arpaStation(id){
-  const [net,sid]=ARPA_ST[id],now=new Date();
-  for(let back=0;back<2;back++){
-    const d=new Date(now.getFullYear(),now.getMonth()-back,1);
-    const r=await fetchT(`${API.arpa}?network=${net}&year=${d.getFullYear()}&month=${d.getMonth()+1}&id_station=${sid}`,15000);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const res=arpaLatest(parseCsv(await r.text()));
-    if(res) return res;
+  const code=EEA_ST[id];if(!code) return null;
+  const r=await fetchT(EEA_URL+code+'.json',12000);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json(),nowH=new Date().toISOString().slice(0,13),ks=Object.keys(j).filter(k=>k.slice(0,13)<=nowH).sort().reverse();
+  const vals={},ts={};
+  for(const k of ks){
+    for(const p in EEA_POL){
+      const n=EEA_POL[p];if(vals[n]!=null) continue;
+      const v=j[k]['val_'+p];
+      if(j[k]['modelled_'+p]===0&&v!=null&&isFinite(v)&&v>=0){vals[n]=Math.round(v*10)/10;ts[n]=k;}
+    }
+    if(Object.keys(vals).length>=4) break;
   }
-  return null;
+  const all=Object.values(ts);if(!all.length) return null;
+  const last=all.reduce((a,b)=>a>b?a:b);
+  const only={};for(const n in vals) if(new Date(last)-new Date(ts[n])<=6*3600e3) only[n]=vals[n];
+  return {vals:only,date:last.slice(0,10),ts:last};
 }
 async function loadArpa(){
   if(SIM||!S.place||!S.place.ta) return;
-  if(S.arpaT&&Date.now()-S.arpaT<3600e3) return;
+  if(S.arpaT&&Date.now()-S.arpaT<15*60e3) return;
   S.arpaT=Date.now();S.arpaState='loading';
-  const ids=Object.keys(ARPA_ST);let i=0,fails=0;
-  async function worker(){while(i<ids.length){const id=ids[i++];try{S.arpa[id]=await arpaStation(id);}catch(e){fails++;S.arpa[id]=null;}renderArpa();}}
-  await Promise.all([worker(),worker(),worker()]);
+  const ids=Object.keys(EEA_ST);let fails=0;
+  await Promise.all(ids.map(async id=>{try{S.arpa[id]=await arpaStation(id);}catch(e){fails++;}renderArpa();}));
   S.arpaState=fails===ids.length?'error':'done';
   if(fails===ids.length) S.arpaT=0;
   renderArpa();
@@ -531,6 +527,7 @@ async function loadArpa(){
 const arpaLvl=v=>{let m=0;for(const k in v) m=Math.max(m,lvlOf(k,v[k]));return m;};
 const arpaTxt=v=>[['pm10','PM10'],['pm25','PM2.5'],['no2','NO₂'],['so2','SO₂'],['o3','O₃']].filter(a=>v[a[0]]!=null).map(a=>a[1]+' '+v[a[0]]).join(' · ');
 const itDate=d=>{const [y,m,g]=d.split('-');return g+'/'+m;};
+const itHour=ts=>{const d=new Date(ts);return d.getHours()+':00 del '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');};
 function renderArpa(){
   const box=$('#arpaBox');
   if(SIM||!S.place||!S.place.ta||S.status!=='ok'){box.innerHTML='';return;}
@@ -538,10 +535,10 @@ function renderArpa(){
   for(const st of TA_ST){const a=S.arpa[st.id];if(a&&a.vals&&Object.keys(a.vals).length){const d=dist(st.lat,st.lon,S.lat,S.lon);if(d<15&&(!best||d<best.d))best={st,a,d};}}
   if(best){
     const x=S.fc[0];
-    box.innerHTML=`<b>Misura ARPA più vicina</b>: ${best.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (${itDate(best.a.date)}), ${arpaTxt(best.a.vals)} µg/m³.<br>Stima del modello adesso: PM10 ${x.v.pm10} · PM2.5 ${x.v.pm25} · NO₂ ${x.v.no2} · SO₂ ${x.v.so2}. Le misure ARPA sono valori giornalieri e non vanno confrontati ora per ora.`;
-  }else if(S.arpaState==='loading'){box.textContent='Sto leggendo le misure delle centraline ARPA…';}
-  else if(S.arpaState==='error'){box.textContent='Le misure delle centraline ARPA non sono raggiungibili al momento.';}
-  else box.textContent='Nessuna misura recente delle centraline ARPA vicine.';
+    box.innerHTML=`<b>Ultima misura della centralina più vicina</b>: ${best.st.name.replace('Taranto – ','').replace('Statte – ','Statte ')} (ore ${itHour(best.a.ts)}), ${arpaTxt(best.a.vals)} µg/m³.<br>Stima del modello adesso: PM10 ${x.v.pm10} · PM2.5 ${x.v.pm25} · NO₂ ${x.v.no2} · SO₂ ${x.v.so2}. Le misure sono orarie e non ancora validate; arrivano con qualche ora di ritardo.`;
+  }else if(S.arpaState==='loading'){box.textContent='Sto leggendo le misure delle centraline…';}
+  else if(S.arpaState==='error'){box.textContent='Le misure delle centraline non sono raggiungibili al momento.';}
+  else box.textContent='Nessuna misura recente delle centraline vicine.';
   if(S.status==='ok') renderMap();
 }
 
@@ -697,12 +694,12 @@ function renderMap(){
     if(!SIM){
       const a=S.arpa[st.id],ok=a&&a.vals&&Object.keys(a.vals).length;
       if(ok){
-        const l=arpaLvl(a.vals),age=Math.round((Date.now()-new Date(a.date+'T12:00:00').getTime())/864e5);
+        const l=arpaLvl(a.vals),age=Math.round((Date.now()-new Date(a.ts).getTime())/3600e3);
         L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:LV[l].c,fillOpacity:1})
-         .bindPopup(`<b>${st.name}</b><br>${arpaTxt(a.vals)} µg/m³<br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Misura ARPA Puglia del ${itDate(a.date)}${age>7?' (dato di '+age+' giorni fa)':''}. Valore giornaliero: il colore applica le fasce orarie EAQI ed è indicativo.</div>`).addTo(layer);
+         .bindPopup(`<b>${st.name}</b><br>${arpaTxt(a.vals)} µg/m³<br><span class="pill" style="background:${LV[l].c}">${LV[l].n}</span><div style="color:#9aa39f;font-size:11px;margin-top:6px">Misura oraria delle ore ${itHour(a.ts)}${age>12?' (dato di '+age+' ore fa)':''}, rete ARPA Puglia/Regione via EEA. Dato non validato: il colore applica le fasce EAQI.</div>`).addTo(layer);
       }else{
         L.circleMarker([st.lat,st.lon],{radius:9,color:'#121414',weight:2,fillColor:'#6b7270',fillOpacity:1})
-         .bindPopup(`<b>${st.name}</b><br><span style="color:#9aa39f">${S.arpaState==='loading'?'Sto leggendo la misura…':'Misura ARPA non disponibile al momento'}</span>`).addTo(layer);
+         .bindPopup(`<b>${st.name}</b><br><span style="color:#9aa39f">${S.arpaState==='loading'?'Sto leggendo la misura…':(EEA_ST[st.id]?'Misura non disponibile al momento':'Centralina non presente nel servizio europeo')}</span>`).addTo(layer);
       }
       return;
     }
